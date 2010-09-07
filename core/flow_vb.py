@@ -1,3 +1,9 @@
+from _ess import _ESS
+from _latent_variables import _LatentVariables
+from _lower_bound import _LowerBound
+from _posterior import _Posterior
+from _prior import _Prior 
+
 class FlowVB(object):
     """Gate flow cytometry data using mixtures of Student-t densities
 
