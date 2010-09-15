@@ -14,6 +14,7 @@ class _LowerBound(object):
 
     - log_dirichlet_normalisation0
     - log_dirichlet_normalisation
+
     """
 
     def __init__():

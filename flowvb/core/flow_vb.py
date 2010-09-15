@@ -24,7 +24,7 @@ class FlowVB(object):
     - verbose                              - Be verbose?
     - kappa_prior                          - Prior parameter for kappa 
     - approximate_dof                      - Use approximation for the update of the degrees of freedom?
-    - threshold_remove_cluster             - Threshold to remove a cluster
+    - threshold_remove_component           - Threshold to remove a component
     - gaussian                             - Use gaussian density (instead of Student-t)
     _ no_random_restarts                   - Number of random restarts
     - standardize                          - Standardize data?
@@ -35,20 +35,23 @@ class FlowVB(object):
     - responsabilities                     - Responsabilities
     - codebook                             - Hard labels
     - mixweights                           - Mixing weights of the components
-    - cluster_centers                      - Centers of the clusters
-    - cluster_covariances                  - Covariance matrices of the clusters
-    - cluster_dof                          - Degrees of freedom of the clusters
+    - component_centers                    - Centers of the components
+    - component_precisions                 - Covariance matrices of the components
+    - component_dof                        - Degrees of freedom of the components
 
     - no_components_merged                 - Number of components after flowMerge
     - responsabilities_merges              - Responsabilities after flowMerge
     - codebook_merged                      - Hard labels after flowMerge    
+
     """    
 
     def __init__():
         """Fit the model to the data using Variational Bayes
+        
         """
         pass
 
     def plot():
         """Plot
+        
         """
