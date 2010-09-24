@@ -1,3 +1,5 @@
+import numpy as np
+
 class _Posterior(object):
     """Class to compute and store the posterior parameters of the model.
 
@@ -26,11 +28,13 @@ class _Posterior(object):
         """
         pass
 
+
     def update_parameters():
         """Update posterior parameters.
 
         """
         pass
+
 
     def remove_clusters():
         """Remove clusters with insufficient support.
@@ -38,47 +42,82 @@ class _Posterior(object):
         """
         pass
 
-    @staticmethod
-    def _update_dirichlet_parameter_posterior(no_observations,
-                                              mixweights,
-                                              dirichlet_parameter_prior):
-        """ Update `dirichlet_parameter_posterior` (Eq 27 in Arch2007) """
-        pass
 
     @staticmethod
-    def _update_normal_wishart_scale_posterior(no_observations,
-                                               e_scaled_responsabilities,
-                                               normal_wishart_scale_prior):
-        """ Update `scale_prec_posterior` (Eq 28 in Arch2007) """
-        pass
+    def _update_posterior_dirichlet(no_observations,
+                                    e_mixweights,
+                                    prior_dirichlet):
+        """ Update `posterior_dirichlet` (Eq 27 in Arch2007) """
+
+        posterior_dirichlet = no_observations * e_mixweights + prior_dirichlet
+        return posterior_dirichlet
+
 
     @staticmethod
-    def _update_normal_wishart_mean_posterior(no_observations,
-                                              e_scaled_responsabilities,
-                                              normal_wishart_scale_prior,
-                                              normal_wishart_scale_posterior,
-                                              normal_wishart_mean_prior):
-        """ Update `normal_mean_posterior` (Eq 29 in Arch2007) """
-        pass
+    def _update_posterior_nws_scale(no_observations,
+                                    e_scaled_responsabilities,
+                                    prior_nws_scale):
+        """ Update `posterior_nws_scale` (Eq 28 in Arch2007) """
+
+        posterior_nws_scale = no_observations * e_scaled_responsabilities \
+                              + prior_nws_scale
+        return posterior_nws_scale
+
 
     @staticmethod
-    def _update_normal_wishart_dof_posterior(no_observations,
-                                             mixweights,
-                                             normal_wishart_dof_prior):
+    def _update_posterior_nws_mean(no_observations,
+                                   no_components,
+                                   e_scaled_responsabilities,
+                                   prior_nws_scale,
+                                   posterior_nws_scale,
+                                   prior_nws_mean):
+        """ Update `posterior_nws_mean` (Eq 29 in Arch2007) """
+
+        update = lambda k: (no_observations * e_scaled_responsabilities[k] * 
+                            e_component_mean[k,:] + prior_nws_scale * 
+                            prior_nws_mean) / posterior_nws_scale(k)
+        
+        posterior_nws_mean = np.array([ update(k) for k in range(no_components) ])
+        return posterior_nws_mean
+
+    
+    @staticmethod
+    def _update_posterior_nws_dof(no_observations,
+                                  e_mixweights,
+                                  prior_nws_dof):
         """ Update `normal_wishart_dof_posterior` (Eq 30 in Arch2007) """
-        pass
+
+        posterior_nws_dof = no_observations * e_mixweights + prior_nws_dof
+        return posterior_nws_dof
 
     @staticmethod
-    def _update_normal_wishart_scale_matrix_posterior(no_observations,
-                                                      e_component_mean,
-                                                      normal_wishart_mean_prior,
-                                                      e_scaled_responsabilities,
-                                                      e_component_covar,
-                                                      normal_wishart_scale_prior,
-                                                      normal_wishart_scale_posterior,
-                                                      normal_wishart_scale_matrix_prior):
-        """ Update `normal_wishart_scale_matrix_posterior` (Eq 31 in Arch2007) """
-        pass
+    def _update_posterior_nws_scale_matrix(no_observations,
+                                           no_components,
+                                           e_component_mean,
+                                           prior_nws_mean,
+                                           e_scaled_responsabilities,
+                                           e_component_covar,
+                                           prior_nws_scale,
+                                           posterior_nws_scale,
+                                           prior_nws_scale_matrix):
+        """ Update `posterior_nws_scale_matrix` (Eq 31 in Arch2007) """
+
+        def update(k):
+            scatter = (e_component_mean[k,:] - prior_nws_mean).T * \
+                      (e_component_mean[k,:] - prior_nws_mean)
+
+            return no_observations * e_scaled_responsabilities[k] * \
+                   e_component_covar[:,:,k] + \
+                   (no_observations * e_scaled_responsabilities[k] *
+                    prior_nws_scale) / \
+                   posterior_nws_scale[k] * scatter + prior_nws_scale_matrix
+
+        posterior_nws_scale_matrix = np.array([ update(k) for k in range(no_components) ])
+        return posterior_nws_scale_matrix
+        
+                   
+            
+        
 
     @staticmethod
     def _update_student_dof(no_observations,
