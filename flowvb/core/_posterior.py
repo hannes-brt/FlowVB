@@ -114,8 +114,8 @@ class _Posterior(object):
 
         posterior_nws_scale_matrix = np.array([ update(k) for k in range(num_comp) ])
         return posterior_nws_scale_matrix
-        
-                   
+
+
     @staticmethod
     def _update_student_dof(num_obs,
                             num_comp,
