@@ -2,8 +2,8 @@ from math import log
 import numpy as np
 from scipy.special import psi
 from scipy.optimize import fsolve
-from enthought.traits.api import HasTraits, Array, Float, Int
-from _model_parameters import _ModelParameters
+from enthought.traits.api import HasTraits, Array, Float, Int, Bool, Instance
+from _prior import _Prior
 
 class _Posterior(HasTraits):
     """Class to compute and store the posterior parameters of the model.
@@ -13,6 +13,8 @@ class _Posterior(HasTraits):
     num_obs = Int()
     num_comp = Int()
     num_features = Int()
+
+    Prior = Instance(_Prior)
     
     dirichlet = Array()
     nws_mean = Array()
@@ -23,11 +25,30 @@ class _Posterior(HasTraits):
     smm_dof = Array()
     smm_dof_init = Float()
 
-    def __init__(self):
+    gausian = Bool()
+
+    def __init__(self, Prior, num_comp, smm_dof_init = 20, gaussian  = False):
         """Initialize posterior parameters.
 
         """
-        pass
+
+        self.Prior = Prior
+        
+        self.num_obs = Prior.num_obs
+        self.num_features = Prior.num_features
+        self.num_comp = num_comp
+
+        self.dirichlet = Prior.dirichlet * np.ones(self.num_comp)
+        self.nws_mean = Prior.nws_mean * np.ones((self.num_comp,
+                                                  self.num_features))
+        self.nws_scale = Prior.nws_scale * np.ones(self.num_comp)
+        self.nws_dof = Prior.nws_dof * np.ones(self.num_comp)
+
+        self.smm_dof_init = smm_dof_init
+        self.smm_dof = smm_dof_init * np.ones(self.num_comp)
+
+        self.nws_scale_matrix = [Prior.nws_scale_matrix
+                                 for k in range(self.num_comp)]
 
     def update_parameters():
         """Update posterior parameters.
