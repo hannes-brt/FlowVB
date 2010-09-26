@@ -25,16 +25,10 @@ class _Prior(HasTraits):
 
         self.num_obs = data.shape[0]
         self.num_features = data.shape[1]
-        self.num_comp = num_comp
 
         self.dirichlet = prior_dirichlet
         self.nws_mean = nws_mean
         self.nws_scale = nws_scale
         self.nws_dof = nws_dof
         self.nws_scale_matrix = nws_scale_matrix * mat(eye(self.num_features))
-
-    def remove_clusters():
-        """Remove clusters with insufficient support.
-
-        """
-        pass
+        
