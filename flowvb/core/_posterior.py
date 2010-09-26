@@ -1,4 +1,6 @@
 import numpy as np
+from scipy.special import psi
+from scipy.optimize import fsolve
 
 class _Posterior(object):
     """Class to compute and store the posterior parameters of the model.
@@ -115,15 +117,29 @@ class _Posterior(object):
         posterior_nws_scale_matrix = np.array([ update(k) for k in range(num_comp) ])
         return posterior_nws_scale_matrix
 
-
     @staticmethod
-    def _update_student_dof(num_obs,
+    def _update_student_dof(student_dof_old,
+                            num_obs,
                             num_comp,
                             mixweights,
                             e_responsabilities,
                             e_scale_student,
                             e_log_scale_student):
         """ Update `student_dof` (Eq 36 in Arch2007) """
-        pass
-                                            
-                                            
+
+        student_dof = np.array()
+
+        for k in range(num_comp):
+            frac = (1 / (num_obs * mixweights[k])) * \
+                   sum(e_responsabilities[k,:] * \
+                       (e_log_scale_student[k,:] - e_scale_student[k,:]))
+            objective_func = lambda dof: log(dof / 2) + 1 - psi(dof / 2) + frac
+
+            try:
+                student_dof = np.append(student_dof,
+                                        fsolve(objective_func, self.student_dof[k]))
+            else:
+                student_dof = np.append(student_dof,
+                                        student_dof_old[k])
+
+        return student_dof
