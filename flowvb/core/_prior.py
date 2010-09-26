@@ -17,7 +17,7 @@ class _Prior(object):
                                              
     """
 
-    def __init__():
+    def __init__(self):
         """Initialize prior paramters.
 
         """

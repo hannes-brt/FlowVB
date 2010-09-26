@@ -15,7 +15,7 @@ class _LatentVariables(object):
 
     """
     
-    def __init__():
+    def __init__(self):
         """Initialize latent variables.
 
         """

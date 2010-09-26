@@ -45,7 +45,7 @@ class FlowVB(object):
 
     """    
 
-    def __init__():
+    def __init__(self):
         """Fit the model to the data using Variational Bayes
         
         """

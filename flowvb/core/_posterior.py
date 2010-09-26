@@ -22,7 +22,7 @@ class _Posterior(object):
     
     """
 
-    def __init__():
+    def __init__(self):
         """Initialize posterior parameters.
 
         """
@@ -116,9 +116,6 @@ class _Posterior(object):
         return posterior_nws_scale_matrix
         
                    
-            
-        
-
     @staticmethod
     def _update_student_dof(num_obs,
                             num_comp,

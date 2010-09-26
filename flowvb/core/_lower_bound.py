@@ -17,7 +17,7 @@ class _LowerBound(object):
 
     """
 
-    def __init__():
+    def __init__(self):
         """Initialize lower bound.
 
         """

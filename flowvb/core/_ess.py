@@ -13,7 +13,7 @@ class _ESS(object):
     - num_components               - Number of components (K in Arch2007)
     
     """
-    def __init__():
+    def __init__(self):
         """Initialize sufficient statistics.
 
         """
