@@ -2,12 +2,26 @@ from math import log
 import numpy as np
 from scipy.special import psi
 from scipy.optimize import fsolve
+from enthought.traits.api import HasTraits, Array, Float, Int
+from _model_parameters import _ModelParameters
 
-
-class _Posterior(object):
+class _Posterior(HasTraits):
     """Class to compute and store the posterior parameters of the model.
 
     """
+
+    num_obs = Int()
+    num_comp = Int()
+    num_features = Int()
+    
+    dirichlet = Array()
+    nws_mean = Array()
+    nws_scale = Array()
+    nws_dof = Array()
+    nws_scale_matrix = Array()
+
+    smm_dof = Array()
+    smm_dof_init = Float()
 
     def __init__(self):
         """Initialize posterior parameters.
