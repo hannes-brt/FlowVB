@@ -5,6 +5,7 @@ from scipy.optimize import fsolve
 from enthought.traits.api import HasTraits, Array, Float, Int, Bool, Instance
 from _prior import _Prior
 
+
 class _Posterior(HasTraits):
     """Class to compute and store the posterior parameters of the model.
 
@@ -15,7 +16,7 @@ class _Posterior(HasTraits):
     num_features = Int()
 
     Prior = Instance(_Prior)
-    
+
     dirichlet = Array()
     nws_mean = Array()
     nws_scale = Array()
@@ -27,13 +28,13 @@ class _Posterior(HasTraits):
 
     gausian = Bool()
 
-    def __init__(self, Prior, num_comp, smm_dof_init = 20, gaussian  = False):
+    def __init__(self, Prior, num_comp, smm_dof_init=20, gaussian=False):
         """Initialize posterior parameters.
 
         """
 
         self.Prior = Prior
-        
+
         self.num_obs = Prior.num_obs
         self.num_features = Prior.num_features
         self.num_comp = num_comp
