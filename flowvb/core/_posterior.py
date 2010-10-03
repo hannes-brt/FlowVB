@@ -64,33 +64,33 @@ class _Posterior(HasTraits):
         pass
 
     @staticmethod
-    def _update_posterior_dirichlet(num_obs,
-                                    smm_mixweights,
-                                    prior_dirichlet):
-        """ Update `posterior_dirichlet` (Eq 27 in Arch2007) """
+    def _update_dirichlet(num_obs,
+                          smm_mixweights,
+                          prior_dirichlet):
+        """ Update `dirichlet` (Eq 27 in Arch2007) """
 
         posterior_dirichlet = num_obs * smm_mixweights + prior_dirichlet
         return posterior_dirichlet
 
     @staticmethod
-    def _update_posterior_nws_scale(num_obs,
-                                    latent_scaled_resp,
-                                    prior_nws_scale):
-        """ Update `posterior_nws_scale` (Eq 28 in Arch2007) """
+    def _update_nws_scale(num_obs,
+                          latent_scaled_resp,
+                          prior_nws_scale):
+        """ Update `nws_scale` (Eq 28 in Arch2007) """
 
-        posterior_nws_scale = num_obs * latent_scaled_resp + \
+        nws_scale = num_obs * latent_scaled_resp + \
                               prior_nws_scale
-        return posterior_nws_scale
+        return nws_scale
 
     @staticmethod
-    def _update_posterior_nws_mean(num_obs,
-                                   num_comp,
-                                   latent_scaled_resp,
-                                   smm_mean,
-                                   prior_nws_scale,
-                                   posterior_nws_scale,
-                                   prior_nws_mean):
-        """ Update `posterior_nws_mean` (Eq 29 in Arch2007) """
+    def _update_nws_mean(num_obs,
+                         num_comp,
+                         latent_scaled_resp,
+                         smm_mean,
+                         prior_nws_scale,
+                         posterior_nws_scale,
+                         prior_nws_mean):
+        """ Update `nws_mean` (Eq 29 in Arch2007) """
 
         update = lambda k: (num_obs * latent_scaled_resp[k] *
                             smm_mean[k, :] + prior_nws_scale *
@@ -100,25 +100,25 @@ class _Posterior(HasTraits):
         return posterior_nws_mean
 
     @staticmethod
-    def _update_posterior_nws_dof(num_obs,
-                                  smm_mixweights,
-                                  prior_nws_dof):
-        """ Update `normal_wishart_dof_posterior` (Eq 30 in Arch2007) """
+    def _update_nws_dof(num_obs,
+                        smm_mixweights,
+                        prior_nws_dof):
+        """ Update `nws_dof` (Eq 30 in Arch2007) """
 
         posterior_nws_dof = num_obs * smm_mixweights + prior_nws_dof
         return posterior_nws_dof
 
     @staticmethod
-    def _update_posterior_nws_scale_matrix(num_obs,
-                                           num_comp,
-                                           smm_mean,
-                                           prior_nws_mean,
-                                           latent_scaled_resp,
-                                           smm_covar,
-                                           prior_nws_scale,
-                                           posterior_nws_scale,
-                                           prior_nws_scale_matrix):
-        """ Update `posterior_nws_scale_matrix` (Eq 31 in Arch2007) """
+    def _update_nws_scale_matrix(num_obs,
+                                 num_comp,
+                                 smm_mean,
+                                 prior_nws_mean,
+                                 latent_scaled_resp,
+                                 smm_covar,
+                                 prior_nws_scale,
+                                 posterior_nws_scale,
+                                 prior_nws_scale_matrix):
+        """ Update `nws_scale_matrix` (Eq 31 in Arch2007) """
 
         def update(k):
             scatter = (smm_mean[k, :] - prior_nws_mean).T * \
