@@ -32,6 +32,7 @@ class TestUpdateDirichlet(TestSetUp):
             self.assertEqual(type(posterior_dirichlet), type(np.array(1)))
 
     def testFaithful(self):
+        """ Test with some data from Old Faithful """
         from data.old_faithful.setup_test_data.posterior import dirichlet as dl
 
         posterior_dirichlet_test = _Posterior._update_dirichlet(
@@ -40,7 +41,7 @@ class TestUpdateDirichlet(TestSetUp):
         [self.assertAlmostEqual(dl.posterior_dirichlet[k],
                                 posterior_dirichlet_test[k],
                                 TEST_ACCURACY)
-         for k in range(len(dl.posterior_dirichlet))]
+         for k in range(dl.num_comp)]
 
 if __name__ == '__main__':
     suite = unittest.TestLoader().loadTestsFromTestCase(TestUpdateDirichlet)
