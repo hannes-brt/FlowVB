@@ -74,27 +74,27 @@ class _Posterior(HasTraits):
 
     @staticmethod
     def _update_nws_scale(num_obs,
-                          latent_scaled_resp,
+                          scaled_resp,
                           prior_nws_scale):
         """ Update `nws_scale` (Eq 28 in Arch2007) """
 
-        nws_scale = num_obs * latent_scaled_resp + \
+        nws_scale = num_obs * scaled_resp + \
                               prior_nws_scale
         return nws_scale
 
     @staticmethod
     def _update_nws_mean(num_obs,
                          num_comp,
-                         latent_scaled_resp,
+                         scaled_resp,
                          smm_mean,
                          prior_nws_scale,
-                         posterior_nws_scale,
+                         nws_scale,
                          prior_nws_mean):
         """ Update `nws_mean` (Eq 29 in Arch2007) """
 
-        update = lambda k: (num_obs * latent_scaled_resp[k] *
+        update = lambda k: (num_obs * scaled_resp[k] *
                             smm_mean[k, :] + prior_nws_scale *
-                            prior_nws_mean) / posterior_nws_scale(k)
+                            prior_nws_mean) / nws_scale[k]
 
         posterior_nws_mean = np.array([update(k) for k in range(num_comp)])
         return posterior_nws_mean
