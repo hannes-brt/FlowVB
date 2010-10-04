@@ -113,10 +113,10 @@ class _Posterior(HasTraits):
                                  num_comp,
                                  smm_mean,
                                  prior_nws_mean,
-                                 latent_scaled_resp,
+                                 scaled_resp,
                                  smm_covar,
                                  prior_nws_scale,
-                                 posterior_nws_scale,
+                                 nws_scale,
                                  prior_nws_scale_matrix):
         """ Update `nws_scale_matrix` (Eq 31 in Arch2007) """
 
@@ -124,11 +124,11 @@ class _Posterior(HasTraits):
             scatter = (smm_mean[k, :] - prior_nws_mean).T * \
                       (smm_mean[k, :] - prior_nws_mean)
 
-            return num_obs * latent_scaled_resp[k] * \
+            return num_obs * scaled_resp[k] * \
                    smm_covar[:, :, k] + \
-                   (num_obs * latent_scaled_resp[k] *
+                   (num_obs * scaled_resp[k] *
                     prior_nws_scale) / \
-                   posterior_nws_scale[k] * scatter + prior_nws_scale_matrix
+                   nws_scale[k] * scatter + prior_nws_scale_matrix
 
         posterior_nws_scale_matrix = np.array([update(k)
                                                for k in range(num_comp)])
@@ -139,17 +139,17 @@ class _Posterior(HasTraits):
                         num_obs,
                         num_comp,
                         smm_mixweights,
-                        latent_responsabilites,
+                        latent_resp,
                         latent_scale,
-                        log_scale_student):
+                        latent_log_scale):
         """ Update `smm_dof` (Eq 36 in Arch2007) """
 
-        smm_dof = np.array()
+        smm_dof = np.array([])
 
         for k in range(num_comp):
             frac = (1 / (num_obs * smm_mixweights[k])) * \
-                   sum(latent_responsabilites[k, :] * \
-                       (log_scale_student[k, :] - latent_scale[k, :]))
+                   sum(latent_resp[k, :] * \
+                       (latent_log_scale[k, :] - latent_scale[k, :]))
             objective_func = lambda dof: log(dof / 2) + 1 - psi(dof / 2) + frac
 
             try:
