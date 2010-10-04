@@ -25,6 +25,7 @@ class _Prior(HasTraits):
 
         self.num_obs = data.shape[0]
         self.num_features = data.shape[1]
+        self.num_comp = num_comp
 
         self.dirichlet = prior_dirichlet
         self.nws_mean = nws_mean
