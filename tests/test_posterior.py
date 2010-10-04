@@ -43,6 +43,46 @@ class TestUpdateDirichlet(TestSetUp):
                                 TEST_ACCURACY)
          for k in range(dl.num_comp)]
 
+
+class TestUpdateNwsScale(TestSetUp):
+    def testFaithful(self):
+        """Test with some data from Old Faithful """
+        from data.old_faithful.setup_test_data.posterior \
+             import nws_scale as nwss
+
+        nws_scale_test = _Posterior._update_nws_scale(nwss.num_obs,
+                                                      nwss.scaled_resp,
+                                                      nwss.prior_nws_scale)
+
+        [self.assertAlmostEqual(nwss.nws_scale[k],
+                                nws_scale_test[k],
+                                TEST_ACCURACY)
+         for k in range(nwss.num_comp)]
+
+
+class TestUpdateNwsMean(TestSetUp):
+    def testFaithful(self):
+        """ Test with some data from Old Faithful """
+        from data.old_faithful.setup_test_data.posterior \
+             import nws_mean as nwsm
+
+        nws_mean_test = _Posterior._update_nws_mean(nwsm.num_obs,
+                                                    nwsm.num_comp,
+                                                    nwsm.scaled_resp,
+                                                    nwsm.smm_mean,
+                                                    nwsm.prior_nws_scale,
+                                                    nwsm.nws_scale,
+                                                    nwsm.prior_nws_mean)
+
+        [[self.assertAlmostEqual(nwsm.nws_mean[k, d],
+                                nws_mean_test[k, d],
+                                TEST_ACCURACY)
+         for d in range(nwsm.num_dim)]
+         for k in range(nwsm.num_comp)]
+
+
 if __name__ == '__main__':
     suite = unittest.TestLoader().loadTestsFromTestCase(TestUpdateDirichlet)
+    suite.addTest(unittest.TestLoader().loadTestsFromTestCase(TestUpdateNwsScale))
+    suite.addTest(unittest.TestLoader().loadTestsFromTestCase(TestUpdateNwsMean))
     unittest.TextTestRunner(verbosity=2).run(suite)
