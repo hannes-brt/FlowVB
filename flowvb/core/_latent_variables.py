@@ -54,7 +54,9 @@ class _LatentVariables(HasTraits):
         pass
 
     @staticmethod
-    def _update_latent_resp():
+    def _update_latent_resp(data, Posterior,
+                            log_smm_mixweight,
+                            log_det_precision):
         """ Update `latent_resp` (Eq 22 in Arch2007) """
         pass
 
