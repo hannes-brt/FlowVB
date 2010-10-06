@@ -40,14 +40,50 @@ class _LatentVariables(HasTraits):
         self.gamma_param_alpha = np.nan * np.zeros(self.num_comp)
         self.gamma_param_beta = np.nan * np.zeros(self.num_obs, self.num_comp)
 
-    def update_parameters():
+    def update_parameters(self):
         """Update latent variables.
 
         """
         pass
 
-    def remove_clusters():
+    def remove_clusters(self):
         """Remove clusters with insufficient support.
 
         """
+
+        pass
+
+    @staticmethod
+    def _update_latent_resp():
+        """ Update `latent_resp` (Eq 22 in Arch2007) """
+        pass
+
+    @staticmethod
+    def _update_latent_scale():
+        """ Update `latent_scale` """
+        pass
+
+    @staticmethod
+    def _update_log_scale():
+        """ Update `latent_scale` """
+        pass
+
+    @staticmethod
+    def _update_log_smm_mixweights():
+        """ Update `log_smm_mixweight` """
+        pass
+
+    @staticmethod
+    def _update_log_det_precision():
+        """ Update `log_det_precision` """
+        pass
+
+    @staticmethod
+    def _update_gamma_param_alpha():
+        """ Update `gamma_param_alpha` """
+        pass
+
+    @staticmethod
+    def _update_gamma_param_beta():
+        """ Update `gamma_param_beta` """
         pass
