@@ -22,6 +22,7 @@ class _Posterior(HasTraits):
     nws_scale = Array()
     nws_dof = Array()
     nws_scale_matrix = Array()
+    nws_scale_matrix_inv = Array()
 
     smm_dof = Array()
     smm_dof_init = Float()
