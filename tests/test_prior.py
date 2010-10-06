@@ -3,6 +3,7 @@ import numpy as np
 import os.path
 from flowvb.core._prior import _Prior
 
+
 class TestPrior(unittest.TestCase):
     def testTypes(self):
         """ Tests traits of `_Prior` class for correctness """
@@ -32,8 +33,8 @@ class TestPrior(unittest.TestCase):
         self.assertEqual(PriorObj.nws_dof, nws_dof)
         [[self.assertEqual(PriorObj.nws_scale_matrix[i, j],
                            nws_scale_matrix[i, j])
-        for j in range(num_features)]
-        for i in range(num_features)]
+         for j in range(num_features)]
+         for i in range(num_features)]
 
 
 if __name__ == '__main__':
