@@ -2,9 +2,13 @@ import random as rd
 import numpy as np
 import unittest
 from flowvb.core._posterior import _Posterior
-from flowvb.utils import normalize
+from flowvb.utils import normalize, arrays_almost_equal
+from scipy.io import loadmat
+from os.path import join
 
 TEST_ACCURACY = 3
+MAX_DIFF = pow(10, -TEST_ACCURACY)
+TEST_DATA_LOC = join('tests', 'data', 'old_faithful')
 
 
 class TestSetUp(unittest.TestCase):
@@ -33,115 +37,116 @@ class TestUpdateDirichlet(TestSetUp):
 
     def testFaithful(self):
         """ Test `_update_dirichlet` with some data from Old Faithful """
-        from data.old_faithful.setup_test_data.posterior import dirichlet as dl
-
+        dl = loadmat(join(TEST_DATA_LOC, 'posterior_dirichlet.mat'),
+                     squeeze_me=True)
         posterior_dirichlet_test = _Posterior._update_dirichlet(
-            dl.num_obs, dl.smm_mixweights, dl.prior_dirichlet)
+            dl['num_obs'], dl['smm_mixweights'], dl['prior_dirichlet'])
 
-        [self.assertAlmostEqual(dl.posterior_dirichlet[k],
-                                posterior_dirichlet_test[k],
-                                TEST_ACCURACY)
-         for k in range(dl.num_comp)]
+        approx_equal = arrays_almost_equal(dl['posterior_dirichlet'],
+                                           posterior_dirichlet_test,
+                                           accuracy=MAX_DIFF)
+        self.assertTrue(approx_equal)
 
 
 class TestUpdateNwsScale(TestSetUp):
     def testFaithful(self):
         """Test `_update_nws_scale` with some data from Old Faithful """
-        from data.old_faithful.setup_test_data.posterior \
-             import nws_scale as nwss
+        nwss = loadmat(join(TEST_DATA_LOC, 'posterior_nws_scale.mat'),
+                       squeeze_me=True)
 
-        nws_scale_test = _Posterior._update_nws_scale(nwss.num_obs,
-                                                      nwss.scaled_resp,
-                                                      nwss.prior_nws_scale)
+        nws_scale_test = _Posterior._update_nws_scale(nwss['num_obs'],
+                            nwss['latent_scaled_resp'],
+                            nwss['prior_nws_scale'])
 
-        [self.assertAlmostEqual(nwss.nws_scale[k],
-                                nws_scale_test[k],
-                                TEST_ACCURACY)
-         for k in range(nwss.num_comp)]
+        approx_equal = arrays_almost_equal(nwss['posterior_nws_scale'],
+                                           nws_scale_test,
+                                           TEST_ACCURACY)
+        self.assertTrue(approx_equal)
 
 
 class TestUpdateNwsMean(TestSetUp):
     def testFaithful(self):
         """ Test `_update_nws_mean` with some data from Old Faithful """
-        from data.old_faithful.setup_test_data.posterior \
-             import nws_mean as nwsm
+        nwsm = loadmat(join(TEST_DATA_LOC, 'posterior_nws_mean.mat'),
+                       squeeze_me=True)
 
-        nws_mean_test = _Posterior._update_nws_mean(nwsm.num_obs,
-                                                    nwsm.num_comp,
-                                                    nwsm.scaled_resp,
-                                                    nwsm.smm_mean,
-                                                    nwsm.prior_nws_scale,
-                                                    nwsm.nws_scale,
-                                                    nwsm.prior_nws_mean)
+        nws_mean_test = _Posterior._update_nws_mean(
+            nwsm['num_obs'],
+            nwsm['num_comp'],
+            nwsm['latent_scaled_resp'],
+            nwsm['smm_mean'],
+            nwsm['prior_nws_scale'],
+            nwsm['posterior_nws_scale'],
+            nwsm['prior_nws_mean'])
 
         self.assertEqual(nws_mean_test.shape,
-                         (nwsm.num_comp, nwsm.num_dim))
+                         (nwsm['num_comp'], nwsm['num_dim']))
 
-        [[self.assertAlmostEqual(nwsm.nws_mean[k, d],
-                                nws_mean_test[k, d],
-                                TEST_ACCURACY)
-         for d in range(nwsm.num_dim)]
-         for k in range(nwsm.num_comp)]
+        approx_equal = arrays_almost_equal(nws_mean_test,
+                                           nwsm['posterior_nws_mean'],
+                                           accuracy=MAX_DIFF)
+        self.assertTrue(approx_equal)
 
- 
+
 class TestUpdateNwsDof(TestSetUp):
     def testFaithful(self):
         """ Test `_update_nws_dof` with some data from Old Faithful """
-        from data.old_faithful.setup_test_data.posterior \
-             import nws_dof as nwsd
+        nwsd = loadmat(join(TEST_DATA_LOC, 'posterior_nws_dof.mat'),
+                       squeeze_me=True)
 
-        nws_dof_test = _Posterior._update_nws_dof(nwsd.num_obs,
-                                                  nwsd.smm_mixweights,
-                                                  nwsd.prior_nws_dof)
+        nws_dof_test = _Posterior._update_nws_dof(nwsd['num_obs'],
+                                                  nwsd['smm_mixweights'],
+                                                  nwsd['prior_nws_dof'])
 
-        self.assertEqual(nws_dof_test.size, nwsd.num_comp)
-        [self.assertAlmostEqual(nwsd.nws_dof[k], nws_dof_test[k],
-                                TEST_ACCURACY)
-         for k in range(nwsd.num_comp)]
+        self.assertEqual(nws_dof_test.size, nwsd['num_comp'])
+        approx_equal = arrays_almost_equal(nws_dof_test,
+                                           nwsd['posterior_nws_dof'],
+                                           accuracy=MAX_DIFF)
+        self.assertTrue(approx_equal)
 
 
 class TestUpdateNwsScaleMatrix(TestSetUp):
     def testFaithful(self):
         """ Test `_update_nws_scale_matrix` with some
         data from Old Faithful """
-        from data.old_faithful.setup_test_data.posterior \
-             import nws_scale_matrix as nwssm
+        nwssm = loadmat(join(TEST_DATA_LOC, 'posterior_nws_scale_matrix.mat'),
+                        squeeze_me=True)
 
         nws_scale_matrix_test = _Posterior._update_nws_scale_matrix(
-            nwssm.num_obs, nwssm.num_comp, nwssm.smm_mean,
-            nwssm.prior_nws_mean, nwssm.scaled_resp,
-            nwssm.smm_covar, nwssm.prior_nws_scale,
-            nwssm.nws_scale, nwssm.prior_nws_scale_matrix)
+            nwssm['num_obs'], nwssm['num_comp'], nwssm['smm_mean'],
+            nwssm['prior_nws_mean'], nwssm['latent_scaled_resp'],
+            nwssm['smm_covar'], nwssm['prior_nws_scale'],
+            nwssm['posterior_nws_scale'], nwssm['prior_nws_scale_matrix'])
 
         self.assertEqual(nws_scale_matrix_test.shape,
-                         (nwssm.num_comp, nwssm.num_dim, nwssm.num_dim))
-        [[[self.assertAlmostEqual(nwssm.nws_scale_matrix[k, i, j],
-                                nws_scale_matrix_test[k, i, j],
-                                TEST_ACCURACY)
-         for j in range(nwssm.num_dim)]
-         for i in range(nwssm.num_dim)]
-         for k in range(nwssm.num_comp)]
+                         (nwssm['num_comp'],
+                          nwssm['num_dim'],
+                          nwssm['num_dim']))
+        approx_equal = arrays_almost_equal(nws_scale_matrix_test,
+                                           nwssm['posterior_nws_scale_matrix'],
+                                           accuracy=MAX_DIFF)
+        self.assertTrue(approx_equal)
 
 
 class TestUpdateSmmDof(TestSetUp):
     def testFaithful(self):
         """ Test `_update_smm_dof` with some data from Old Faithful """
-        from data.old_faithful.setup_test_data.posterior \
-             import smm_dof as sd
+        sd = loadmat(join(TEST_DATA_LOC, 'smm_dof.mat'),
+                     squeeze_me=True)
 
-        smm_dof_test = _Posterior._update_smm_dof(sd.smm_dof_old,
-                                                  sd.num_obs,
-                                                  sd.num_comp,
-                                                  sd.smm_mixweights,
-                                                  sd.latent_resp,
-                                                  sd.latent_scale,
-                                                  sd.latent_log_scale)
+        smm_dof_test = _Posterior._update_smm_dof(sd['smm_dof_old'],
+                                                  sd['num_obs'],
+                                                  sd['num_comp'],
+                                                  sd['smm_mixweights'],
+                                                  sd['latent_resp'],
+                                                  sd['latent_scale'],
+                                                  sd['latent_log_scale'])
 
-        self.assertEqual(smm_dof_test.size, sd.num_comp)
-        [self.assertAlmostEqual(sd.smm_dof[k],
-                                smm_dof_test[k],
-                                TEST_ACCURACY)
-         for k in range(sd.num_comp)]
+        self.assertEqual(smm_dof_test.size, sd['num_comp'])
+        approx_equal = arrays_almost_equal(smm_dof_test,
+                                           sd['smm_dof'],
+                                           accuracy=MAX_DIFF)
+        self.assertTrue(approx_equal)
 
 if __name__ == '__main__':
     suite = unittest.TestLoader().loadTestsFromTestCase(TestUpdateDirichlet)
