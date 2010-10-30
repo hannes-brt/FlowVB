@@ -1,10 +1,6 @@
 import unittest
-import random as rd
-import numpy as np
-from scipy.io import loadmat
 from os.path import join
 from flowvb.core._posterior import _Posterior
-from flowvb.utils import normalize, arrays_almost_equal
 from tests.test_old_faithful import makeTestFaithful
 
 TEST_ACCURACY = 3
