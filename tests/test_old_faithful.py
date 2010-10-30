@@ -1,4 +1,5 @@
 import unittest
+import types
 import numpy as np
 from scipy.io import loadmat
 from os.path import join
@@ -11,7 +12,7 @@ TEST_DATA_LOC = join('tests', 'data', 'old_faithful')
 
 def makeTestFaithful(mat_filename, test_function, argument_keys, result_key,
                      load_data=False, max_diff=MAX_DIFF,
-                     test_data_loc=TEST_DATA_LOC, doc=''):
+                     test_data_loc=TEST_DATA_LOC):
     """ Factory function to produce classes that are test cases
     for the _update-methods.
 
@@ -34,6 +35,11 @@ def makeTestFaithful(mat_filename, test_function, argument_keys, result_key,
         `mat_filename` and the return value of `test_function`.
     test_data_loc : string, optional
         The location where the data is found.
+
+    Return
+    ------
+    TestCase : class
+        A class derived from superclass to use with unittest.
     """
 
     def testFaithful(self):
@@ -58,5 +64,6 @@ def makeTestFaithful(mat_filename, test_function, argument_keys, result_key,
     testFaithful.__doc__ = docstring_function
 
     docstring_class = "Test `" + test_function.__name__ + "`"
-    clsdict = {'testFaithful': testFaithful, '__doc__': docstring_class}
+    clsdict = {'testFaithful': testFaithful,
+                '__doc__': docstring_class}
     return type('TestFaithful', (unittest.TestCase,), clsdict)
