@@ -54,38 +54,45 @@ class _LatentVariables(HasTraits):
         pass
 
     @staticmethod
-    def _update_latent_resp(data, Posterior,
-                            log_smm_mixweight,
-                            log_det_precision):
+    def _update_latent_resp(data, smm_dof, posterior_nws_scale,
+                            log_smm_mixweight, log_det_precision, scatter):
         """ Update `latent_resp` (Eq 22 in Arch2007) """
         pass
 
     @staticmethod
-    def _update_latent_scale():
+    def _update_latent_scale(gamma_param_alpha, gamma_param_beta):
         """ Update `latent_scale` """
         pass
 
     @staticmethod
-    def _update_log_scale():
-        """ Update `latent_scale` """
+    def _update_latent_log_scale(gamma_param_alpha, gamma_param_beta):
+        """ Update `latent_log_scale` """
         pass
 
     @staticmethod
-    def _update_log_smm_mixweights():
+    def _update_log_smm_mixweight(posterior_dirichlet):
         """ Update `log_smm_mixweight` """
         pass
 
     @staticmethod
-    def _update_log_det_precision():
+    def _update_log_det_precision(num_features, num_comp, posterior_nws_dof,
+                                  posterior_nws_scale_matrix):
         """ Update `log_det_precision` """
         pass
 
     @staticmethod
-    def _update_gamma_param_alpha():
+    def _update_gamma_param_alpha(num_features, smm_dof):
         """ Update `gamma_param_alpha` """
         pass
 
     @staticmethod
-    def _update_gamma_param_beta():
+    def _update_gamma_param_beta(posterior_nws_dof, posterior_nws_scale,
+                                 scatter):
         """ Update `gamma_param_beta` """
+        pass
+
+    @staticmethod
+    def _get_scatter_(data, posterior_nws_scale_matrix_inv,
+                      posterior_nws_mean):
+        """ Compute the scatter """
         pass

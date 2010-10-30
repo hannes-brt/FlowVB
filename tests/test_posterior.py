@@ -1,10 +1,10 @@
+import unittest
 import random as rd
 import numpy as np
-import unittest
-from flowvb.core._posterior import _Posterior
-from flowvb.utils import normalize, arrays_almost_equal
 from scipy.io import loadmat
 from os.path import join
+from flowvb.core._posterior import _Posterior
+from flowvb.utils import normalize, arrays_almost_equal
 
 TEST_ACCURACY = 3
 MAX_DIFF = pow(10, -TEST_ACCURACY)
@@ -60,7 +60,7 @@ class TestUpdateNwsScale(TestSetUp):
 
         approx_equal = arrays_almost_equal(nwss['posterior_nws_scale'],
                                            nws_scale_test,
-                                           TEST_ACCURACY)
+                                           MAX_DIFF)
         self.assertTrue(approx_equal)
 
 

@@ -40,5 +40,9 @@ def arrays_almost_equal(a, b, accuracy=1e-3):
     approx_equal : bool
        Whether the two arrays are approximately equal.
     """
-    d = a - b
-    return (d < accuracy).all()
+
+    try:
+        d = np.absolute(a - b)
+        return (d < accuracy).all()
+    except TypeError:
+        return False
