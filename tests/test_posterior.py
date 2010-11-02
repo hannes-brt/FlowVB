@@ -41,7 +41,7 @@ TestUpdateNwsScaleMatrix = makeTestFaithful('posterior_nws_scale_matrix.mat',
 TestUpdateSmmDof = makeTestFaithful('smm_dof.mat',
         _Posterior._update_smm_dof,
         ('smm_dof_old', 'num_obs', 'num_comp', 'smm_mixweights',
-         'latent_resp',  'latent_scale', 'latent_log_scale'),
+         'latent_resp', 'latent_scale', 'latent_log_scale'),
         'smm_dof')
 
 if __name__ == '__main__':

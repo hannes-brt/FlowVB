@@ -1,5 +1,4 @@
 import unittest
-import types
 import numpy as np
 from scipy.io import loadmat
 from os.path import join
@@ -25,11 +24,11 @@ def makeTestFaithful(mat_filename, test_function, argument_keys, result_key,
     argument_keys : tuple or list
         A tuple or a list of strings that are the names of the arguments to
         `test_function`, as they a are stored in `mat_filename`.
-    result_key : strings
+    result_key : string
         The name of the return of `test_function` as stores in `mat_filename`.
     load_data : bool, optional
         Whether to also load the original data (will be passed as first
-        positional argument to `test_function`.
+        positional argument to `test_function`).
     max_diff : float, optional
         The maximum difference to accept between the test data stored in
         `mat_filename` and the return value of `test_function`.
