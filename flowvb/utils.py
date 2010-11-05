@@ -2,6 +2,8 @@
 """
 
 import numpy as np
+from numpy import log
+from numpy.linalg import cholesky
 from scipy.maxentropy import logsumexp
 
 
@@ -9,6 +11,14 @@ def repeat(x, func, *args, **kargs):
     """Call the function `func` `x` times and accumulate the results in a list
     """
     return [func(*args, **kargs) for _ in range(x)]
+
+
+def logdet(matrix):
+    """Computes the log of the determinant of a matrix
+    """
+    U = cholesky(matrix)
+    logdet = 2 * np.sum(log(np.diag(U)))
+    return logdet
 
 
 def normalize(vector):

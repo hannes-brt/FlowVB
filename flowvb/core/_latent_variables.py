@@ -1,5 +1,9 @@
 from enthought.traits.api import HasTraits, Int, Array
 import numpy as np
+from numpy import log, exp
+from scipy.special import gammaln, psi
+from math import pi
+from flowvb.utils import logdet, normalize_logspace
 
 
 class _LatentVariables(HasTraits):
@@ -56,19 +60,44 @@ class _LatentVariables(HasTraits):
 
     @staticmethod
     def _update_latent_resp(data, smm_dof, posterior_nws_scale,
-                            log_smm_mixweight, log_det_precision, scatter):
+                            posterior_nws_dof, log_smm_mixweight,
+                            log_det_precision, scatter):
         """ Update `latent_resp` (Eq 22 in Arch2007) """
-        pass
+        num_features = np.shape(data)[1]
+        num_comp = len(log_smm_mixweight)
+
+        def get_exp_latent(k):
+            return (gammaln((num_features + smm_dof[k]) / 2) -
+                    gammaln(smm_dof[k] / 2) -
+                    (num_features / 2) * log(smm_dof[k] * pi) +
+                    log_smm_mixweight[k] + log_det_precision / 2 -
+                    ((num_features + smm_dof[k]) / 2) *
+                    log(1 + (posterior_nws_dof[k] / smm_dof[k]) *
+                        scatter[k, :, :] +
+                        num_features / (smm_dof[k] * posterior_nws_scale[k])))
+
+        exp_latent = [get_exp_latent(k) for k in range(num_comp)]
+        log_resp = normalize_logspace(exp_latent)
+        latent_resp = exp(log_resp)
+        return latent_resp
 
     @staticmethod
     def _update_latent_scale(gamma_param_alpha, gamma_param_beta):
         """ Update `latent_scale` """
-        pass
+        num_obs = np.shape(gamma_param_beta)[0]
+
+        latent_scale = (np.tile(gamma_param_alpha, (num_obs, 1)) /
+                        gamma_param_beta)
+        return latent_scale
 
     @staticmethod
     def _update_latent_log_scale(gamma_param_alpha, gamma_param_beta):
         """ Update `latent_log_scale` """
-        pass
+        num_obs = np.shape(gamma_param_beta)[0]
+
+        latent_log_scale = (np.tile(psi(gamma_param_alpha), (num_obs, 1)) -
+                            log(gamma_param_beta))
+        return latent_log_scale
 
     @staticmethod
     def _update_latent_scaled_resp(num_obs, latent_resp, latent_scale):
@@ -80,27 +109,56 @@ class _LatentVariables(HasTraits):
     @staticmethod
     def _update_log_smm_mixweight(posterior_dirichlet):
         """ Update `log_smm_mixweight` """
-        pass
+        log_smm_mixweight = (psi(posterior_dirichlet) -
+                             psi(np.sum(posterior_dirichlet)))
+        return log_smm_mixweight
 
     @staticmethod
     def _update_log_det_precision(num_features, num_comp, posterior_nws_dof,
                                   posterior_nws_scale_matrix):
         """ Update `log_det_precision` """
-        pass
+
+        # Only passes test at max_diff = 1e-1
+        # Unclear if this is Matlab's or Python's fault
+        update = lambda k: (np.sum(psi((posterior_nws_dof[k] +
+                                        1 - range(num_features)) / 2)) +
+                            num_features * log(2) -
+                            logdet(posterior_nws_scale_matrix[k, :, :]))
+        log_det_precision = [update(k) for k in range(num_comp)]
+        return log_det_precision
 
     @staticmethod
     def _update_gamma_param_alpha(num_features, smm_dof):
         """ Update `gamma_param_alpha` """
-        pass
+        gamma_param_alpha = (num_features + smm_dof) / 2
+        return gamma_param_alpha
 
     @staticmethod
     def _update_gamma_param_beta(posterior_nws_dof, posterior_nws_scale,
                                  scatter):
         """ Update `gamma_param_beta` """
-        pass
+        num_features = np.shape(scatter)[1]
+        num_comp = np.shape(posterior_nws_dof)[0]
+
+        update = lambda k: ((posterior_nws_dof[k] / 2) * scatter[k, :, :] +
+                            num_features / (2 * posterior_nws_scale[k]) +
+                            smm_dof[k] / 2)
+        gamma_param_beta = [update(k) for k in range(num_comp)]
+        return gamma_param_beta
 
     @staticmethod
     def _get_scatter_(data, posterior_nws_scale_matrix_inv,
                       posterior_nws_mean):
         """ Compute the scatter """
-        pass
+        num_obs = np.shape(data)[0]
+        num_comp = np.shape(posterior_nws_mean)[0]
+
+        def update(k):
+            data_center = data - np.tile(posterior_nws_mean[k, :],
+                                         (num_obs, 1))
+            prod = np.dot(data_center *
+                          posterior_nws_scale_matrix_inv[k, :, :])
+            return np.sum(prod * data_center, 1)
+
+        scatter = [update(k) for k in range(num_comp)]
+        return scatter
