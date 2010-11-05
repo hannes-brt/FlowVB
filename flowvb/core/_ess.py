@@ -28,7 +28,6 @@ class _ESS(HasTraits):
         self.smm_mean = smm_mean
         self.smm_covar = smm_covar
         self.smm_mixweights = smm_mixweights
-        self.latent_scaled_resp = smm_mixweights
 
     def update_parameters():
         """Update sufficient statistics.
@@ -76,10 +75,3 @@ class _ESS(HasTraits):
 
         smm_mixweights = np.sum(latent_resp, 0) / num_obs
         return smm_mixweights
-
-    @staticmethod
-    def _update_latent_scaled_resp(num_obs, latent_resp, latent_scale):
-        """Update `latent_scaled_resp` (Eq 35 in Arch2007) """
-
-        latent_scaled_resp = np.sum(latent_resp * latent_scale, 0) / num_obs
-        return latent_scaled_resp

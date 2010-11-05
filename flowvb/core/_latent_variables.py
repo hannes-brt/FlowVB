@@ -14,6 +14,7 @@ class _LatentVariables(HasTraits):
     latent_resp = Array()
     latent_scale = Array()
     latent_log_scale = Array()
+    latent_scaled_resp = Array()
 
     log_smm_mixweight = Array()
     log_det_precision = Array()
@@ -68,6 +69,13 @@ class _LatentVariables(HasTraits):
     def _update_latent_log_scale(gamma_param_alpha, gamma_param_beta):
         """ Update `latent_log_scale` """
         pass
+
+    @staticmethod
+    def _update_latent_scaled_resp(num_obs, latent_resp, latent_scale):
+        """Update `latent_scaled_resp` (Eq 35 in Arch2007) """
+
+        latent_scaled_resp = np.sum(latent_resp * latent_scale, 0) / num_obs
+        return latent_scaled_resp
 
     @staticmethod
     def _update_log_smm_mixweight(posterior_dirichlet):

@@ -24,6 +24,11 @@ TestUpdateLatentLogScale = makeTestFaithful('latent_log_scale.mat',
         ('gamma_param_alpha', 'gamma_param_beta'),
         'latent_log_scale')
 
+TestUpdateLatentScaledResp = makeTestFaithful('latent_scaled_resp.mat',
+    _LatentVariables._update_latent_scaled_resp,
+    ('num_obs', 'latent_resp', 'latent_scale'),
+    'latent_scaled_resp')
+
 TestUpdateLogSmmMixweight = makeTestFaithful('log_smm_mixweight.mat',
         _LatentVariables._update_log_smm_mixweight,
         ('posterior_dirichlet',),
@@ -52,6 +57,9 @@ if __name__ == '__main__':
         unittest.TestLoader().loadTestsFromTestCase(TestUpdateLatentScale))
     suite.addTest(
         unittest.TestLoader().loadTestsFromTestCase(TestUpdateLatentLogScale))
+    suite.addTest(
+        unittest.TestLoader().loadTestsFromTestCase(
+            TestUpdateLatentScaledResp))
     suite.addTest(
         unittest.TestLoader().loadTestsFromTestCase(TestUpdateLogSmmMixweight))
     suite.addTest(

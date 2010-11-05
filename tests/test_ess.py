@@ -19,18 +19,10 @@ TestUpdateSmmMixweights = makeTestFaithful('smm_mixweights.mat',
     ('num_obs', 'latent_resp'),
     'smm_mixweights')
 
-TestUpdateLatentScaledResp = makeTestFaithful('latent_scaled_resp.mat',
-    _ESS._update_latent_scaled_resp,
-    ('num_obs', 'latent_resp', 'latent_scale'),
-    'latent_scaled_resp')
-
 if __name__ == '__main__':
     suite = unittest.TestLoader().loadTestsFromTestCase(TestUpdateSmmMean)
     suite.addTest(
         unittest.TestLoader().loadTestsFromTestCase(TestUpdateSmmCovar))
     suite.addTest(
         unittest.TestLoader().loadTestsFromTestCase(TestUpdateSmmMixweights))
-    suite.addTest(
-        unittest.TestLoader().loadTestsFromTestCase(
-            TestUpdateLatentScaledResp))
     unittest.TextTestRunner(verbosity=2).run(suite)
