@@ -121,9 +121,8 @@ class _Posterior(HasTraits):
         """ Update `nws_scale_matrix` (Eq 31 in Arch2007) """
 
         def update(k):
-            scatter = (smm_mean[k, :] - prior_nws_mean).T * \
-                      (smm_mean[k, :] - prior_nws_mean)
-
+            scatter = np.outer((smm_mean[k, :] - prior_nws_mean),
+                      (smm_mean[k, :] - prior_nws_mean))
             return num_obs * scaled_resp[k] * \
                    smm_covar[:, :, k] + \
                    (num_obs * scaled_resp[k] *
@@ -148,16 +147,20 @@ class _Posterior(HasTraits):
 
         for k in range(num_comp):
             frac = (1 / (num_obs * smm_mixweights[k])) * \
-                   sum(latent_resp[k, :] * \
-                       (latent_log_scale[k, :] - latent_scale[k, :]))
-            objective_func = lambda dof: log(dof / 2) + 1 - psi(dof / 2) + frac
+                   sum(latent_resp[:, k] * \
+                       (latent_log_scale[:, k] - latent_scale[:, k]))
+
+            def objective_func(dof):
+#                print dof
+                return log(np.absolute(dof) / 2) + 1 -\
+                       psi(np.absolute(dof) / 2) + frac
 
             try:
-                smm_dof = np.append(smm_dof,
-                                        fsolve(objective_func,
-                                               smm_dof_old[k]))
-            except:
-                smm_dof = np.append(smm_dof,
-                                        smm_dof_old[k])
+                smm_dof_new = np.absolute(
+                    fsolve(objective_func, smm_dof_old[k]))
+            except ValueError:
+                smm_dof_new = smm_dof_old[k]
+
+            smm_dof = np.append(smm_dof, smm_dof_new)
 
         return smm_dof
