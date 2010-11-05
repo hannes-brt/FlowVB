@@ -150,9 +150,7 @@ class _Posterior(HasTraits):
                    sum(latent_resp[:, k] * \
                        (latent_log_scale[:, k] - latent_scale[:, k]))
 
-            def objective_func(dof):
-#                print dof
-                return log(np.absolute(dof) / 2) + 1 -\
+            objective_func = lambda dof: log(np.absolute(dof) / 2) + 1 -\
                        psi(np.absolute(dof) / 2) + frac
 
             try:
