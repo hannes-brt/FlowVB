@@ -75,12 +75,11 @@ class _Posterior(HasTraits):
 
     @staticmethod
     def _update_nws_scale(num_obs,
-                          scaled_resp,
+                          latent_scaled_resp,
                           prior_nws_scale):
         """ Update `nws_scale` (Eq 28 in Arch2007) """
 
-        nws_scale = num_obs * scaled_resp + \
-                              prior_nws_scale
+        nws_scale = num_obs * latent_scaled_resp + prior_nws_scale
         return nws_scale
 
     @staticmethod
