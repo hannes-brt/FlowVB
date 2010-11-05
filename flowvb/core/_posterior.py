@@ -123,11 +123,11 @@ class _Posterior(HasTraits):
         def update(k):
             scatter = np.outer((smm_mean[k, :] - prior_nws_mean),
                       (smm_mean[k, :] - prior_nws_mean))
-            return num_obs * scaled_resp[k] * \
-                   smm_covar[:, :, k] + \
-                   (num_obs * scaled_resp[k] *
-                    prior_nws_scale) / \
-                   nws_scale[k] * scatter + prior_nws_scale_matrix
+            return (num_obs * scaled_resp[k] *
+                    smm_covar[:, :, k] +
+                    (num_obs * scaled_resp[k] *
+                     prior_nws_scale) /
+                    nws_scale[k] * scatter + prior_nws_scale_matrix)
 
         posterior_nws_scale_matrix = np.array([update(k)
                                                for k in range(num_comp)])
@@ -150,8 +150,10 @@ class _Posterior(HasTraits):
                    sum(latent_resp[:, k] * \
                        (latent_log_scale[:, k] - latent_scale[:, k]))
 
-            objective_func = lambda dof: log(np.absolute(dof) / 2) + 1 -\
-                       psi(np.absolute(dof) / 2) + frac
+            # By using the absolute value of dof, we prevent the
+            # algorithm from failing when it tries dof < 0
+            objective_func = lambda dof: (log(np.absolute(dof) / 2) + 1 -
+                                          psi(np.absolute(dof) / 2) + frac)
 
             try:
                 smm_dof_new = np.absolute(
