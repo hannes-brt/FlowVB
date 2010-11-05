@@ -2,7 +2,7 @@ import unittest
 import numpy as np
 from scipy.io import loadmat
 from os.path import join
-from flowvb.utils import arrays_almost_equal
+from flowvb.utils import arrays_almost_equal, standardize
 
 TEST_ACCURACY = 3
 MAX_DIFF = pow(10, -TEST_ACCURACY)
@@ -41,16 +41,15 @@ def makeTestFaithful(mat_filename, test_function, argument_keys, result_key,
         A class derived from superclass to use with unittest.
     """
 
-    def testFaithful(self):
+    def runTest(self):
         test_data = loadmat(join(test_data_loc,
                                  mat_filename), squeeze_me=True)
-
         args = (test_data[arg] for arg in argument_keys)
 
         if load_data:
-            data = np.genfromtxt(join(test_data_loc,
-                                      "faithful.txt"), delimiter=",")
-            args = (data, ) + tuple(args)
+            data = loadmat(join(test_data_loc,
+                                'faithful.mat'), squeeze_me=True)
+            args = (data['data'], ) + tuple(args)
 
         test_result = test_function(*args)
         approx_equal = arrays_almost_equal(test_data[result_key],
@@ -60,9 +59,9 @@ def makeTestFaithful(mat_filename, test_function, argument_keys, result_key,
 
     docstring_function = " Test `" + test_function.__name__ + \
                 "` with some data from Old Faithful"
-    testFaithful.__doc__ = docstring_function
+    runTest.__doc__ = docstring_function
 
     docstring_class = "Test `" + test_function.__name__ + "`"
-    clsdict = {'testFaithful': testFaithful,
+    clsdict = {'runTest': runTest,
                 '__doc__': docstring_class}
     return type('TestFaithful', (unittest.TestCase,), clsdict)
