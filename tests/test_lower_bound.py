@@ -46,7 +46,7 @@ TestExpectLogPu = makeTestFaithful('expect_log_pu.mat',
 
 TestExpectLogPz = makeTestFaithful('expect_log_pz.mat',
     _LowerBound._expect_log_pz,
-    ('num_comp', 'latent_resp', 'expect_log_pz'),
+    ('num_comp', 'latent_resp', 'log_smm_mixweight'),
     'expect_log_pz')
 
 TestExpectLogPTheta = makeTestFaithful('expect_log_ptheta.mat',
@@ -54,7 +54,9 @@ TestExpectLogPTheta = makeTestFaithful('expect_log_ptheta.mat',
     ('num_comp', 'num_features', 'prior_nws_mean', 'prior_dirichlet',
      'prior_nws_dof', 'prior_nws_scale', 'prior_nws_scale_matrix',
      'posterior_nws_mean', 'posterior_nws_dof', 'posterior_nws_scale',
-     'posterior_nws_scale_matrix_inv'),
+     'posterior_nws_scale_matrix_inv', 'log_smm_mixweight',
+     'log_det_precision', 'log_wishart_const_init',
+     'log_dirichlet_normalization_prior'),
     'expect_log_ptheta')
 
 TestExpectLogQu = makeTestFaithful('expect_log_qu.mat',

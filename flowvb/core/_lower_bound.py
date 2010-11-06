@@ -1,11 +1,12 @@
 from enthought.traits.api import HasTraits, Int, Float, Instance
 from _prior import _Prior
 import numpy as np
-from numpy import log
-from scipy.special import gammaln
+from numpy import log, dot
+from scipy.special import gammaln, psi
 from flowvb.utils import logdet, mvt_gamma_ln
 from math import pi
-import pdb
+
+EPS = np.finfo(np.float).eps
 
 
 class _LowerBound(HasTraits):
@@ -88,8 +89,11 @@ class _LowerBound(HasTraits):
 
             return (num_features *
                     np.sum(latent_resp[:, k] * latent_log_scale[:, k]) +
+
                     num_obs * log_det_precision[k] * smm_mixweights[k] -
+
                     posterior_nws_dof[k] * mahal_dist -
+
                     num_obs * num_features *
                     (latent_scaled_resp[k] / posterior_nws_scale[k]))
 
@@ -106,9 +110,11 @@ class _LowerBound(HasTraits):
         def update(k):
             return (0.5 * num_obs * smm_mixweights[k] * smm_dof[k] *
                     log(smm_dof[k] / 2) -
+
                     num_obs * smm_mixweights[k] * gammaln(smm_dof[k] / 2) +
                     (smm_dof[k] / 2 - 1) *
                     np.sum(latent_resp[:, k] * latent_log_scale[:, k]) -
+
                     0.5 * num_obs * smm_dof[k] * latent_scaled_resp[k])
 
         expect_log_pu = np.sum([update(k) for k in range(num_comp)])
@@ -117,27 +123,79 @@ class _LowerBound(HasTraits):
     @staticmethod
     def _expect_log_pz(num_comp, latent_resp, log_smm_mixweight):
         """Compute `expect_log_pz` (Eq 42 in Arch2007) """
-        pass
+        update = lambda k: np.sum(latent_resp[:, k] * log_smm_mixweight[k])
+
+        expect_log_pz = np.sum([update(k) for k in range(num_comp)])
+        return expect_log_pz
 
     @staticmethod
     def _expect_log_ptheta(num_comp, num_features, prior_nws_mean,
                            prior_dirichlet, prior_nws_dof, prior_nws_scale,
                            prior_nws_scale_matrix, posterior_nws_mean,
                            posterior_nws_dof, posterior_nws_scale,
-                           posterior_nws_scale_matrix_inv):
+                           posterior_nws_scale_matrix_inv,
+                           log_smm_mixweight, log_det_precision,
+                           log_wishart_const_init,
+                           log_dirichlet_normalization_prior):
         """Compute `expect_log_ptheta` (Eq 43 in Arch2007) """
-        pass
+
+        def update(k):
+            mc = posterior_nws_mean[k, :] - prior_nws_mean
+
+            return ((prior_dirichlet - 1) * log_smm_mixweight[k] -
+
+                    (prior_nws_scale * posterior_nws_dof[k] / 2) *
+                    dot(dot(mc, posterior_nws_scale_matrix_inv[k, :, :]),
+                        mc.T) -
+
+                    0.5 * num_features * prior_nws_scale /
+                    posterior_nws_scale[k] +
+
+                    0.5 * (prior_nws_dof - num_features) *
+                    log_det_precision[k] -
+
+                    0.5 * posterior_nws_dof[k] *
+                    np.trace(dot(prior_nws_scale_matrix,
+                                 posterior_nws_scale_matrix_inv[k, :, :])) -
+
+                    gammaln(prior_dirichlet))
+
+        constant_factors = (log_dirichlet_normalization_prior +
+
+                            num_comp * log_wishart_const_init -
+                            0.5 * num_comp * num_features *
+                            log(2 * pi * prior_nws_scale))
+
+        expect_log_ptheta = (constant_factors +
+                             np.sum([update(k) for k in range(num_comp)]))
+        return expect_log_ptheta
 
     @staticmethod
     def _expect_log_qu(num_obs, num_comp, gamma_param_alpha, gamma_param_beta,
                        latent_resp, smm_mixweights):
         """Compute `expect_log_qu` (Eq 44 in Arch2007) """
-        pass
+
+        update = lambda k: num_obs * (-gammaln(gamma_param_alpha[k]) *
+                                      smm_mixweights[k] +
+
+                                      smm_mixweights[k] *
+                                      psi(gamma_param_alpha[k]) *
+                                      (gamma_param_alpha[k] - 1) +
+
+                                      np.sum(latent_resp[:, k] *
+                                             log(gamma_param_beta[:, k]))
+                                      / num_obs -
+
+                                      smm_mixweights[k] * gamma_param_alpha[k])
+
+        expect_log_qu = np.sum([update(k) for k in range(num_comp)])
+        return expect_log_qu
 
     @staticmethod
     def _expect_log_qz(latent_resp):
         """Compute `expect_log_qz` (Eq 45 in Arch2007) """
-        pass
+        expect_log_qz = np.sum(latent_resp * log(latent_resp + EPS))
+        return expect_log_qz
 
     @staticmethod
     def _expect_log_qtheta(num_comp, num_features, log_wishart_const,
@@ -146,4 +204,24 @@ class _LowerBound(HasTraits):
                            posterior_nws_scale_matrix, log_smm_mixweight,
                            log_det_precision):
         """Compute `expect_log_qtheta` (Eq 46 in Arch2007) """
-        pass
+
+        update = lambda k: ((posterior_dirichlet[k] - 1) *
+                            log_smm_mixweight[k] +
+
+                            0.5 * num_features * log(posterior_nws_scale[k]) +
+
+                            log_wishart_const[k] +
+
+                            0.5 * (posterior_nws_dof[k] - num_features) *
+                            log_det_precision[k] -
+
+                            0.5 * (posterior_nws_dof[k] * num_features) -
+
+                            gammaln(posterior_dirichlet[k]))
+
+        constant_factors = (log_dirichlet_normalization -
+                            0.5 * num_comp * num_features * (log(2 * pi) + 1))
+
+        expect_log_qtheta = (constant_factors +
+                             np.sum([update(k) for k in range(num_comp)]))
+        return expect_log_qtheta
