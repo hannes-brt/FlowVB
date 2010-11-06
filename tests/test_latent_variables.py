@@ -38,7 +38,7 @@ TestUpdateLogDetPrecision = makeTestFaithful('log_det_precision.mat',
         _LatentVariables._update_log_det_precision,
         ('num_features', 'num_comp', 'posterior_nws_dof',
          'posterior_nws_scale_matrix'),
-        ('log_det_precision'), max_diff=1e-1)
+        'log_det_precision')
 
 TestUpdateGammaParamAlpha = makeTestFaithful('gamma_param_alpha.mat',
         _LatentVariables._update_gamma_param_alpha,
@@ -49,7 +49,7 @@ TestUpdateGammaParamBeta = makeTestFaithful('gamma_param_beta.mat',
         _LatentVariables._update_gamma_param_beta,
         ('num_features', 'smm_dof', 'posterior_nws_dof',
          'posterior_nws_scale', 'scatter'),
-        'gamma_param_beta', )
+        'gamma_param_beta')
 
 TestGetScatter = makeTestFaithful('scatter.mat',
         _LatentVariables._get_scatter,
