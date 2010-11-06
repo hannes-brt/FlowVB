@@ -70,14 +70,14 @@ class _LatentVariables(HasTraits):
             return (gammaln((num_features + smm_dof[k]) / 2) -
                     gammaln(smm_dof[k] / 2) -
                     (num_features / 2) * log(smm_dof[k] * pi) +
-                    log_smm_mixweight[k] + log_det_precision / 2 -
+                    log_smm_mixweight[k] + log_det_precision[k] / 2 -
                     ((num_features + smm_dof[k]) / 2) *
                     log(1 + (posterior_nws_dof[k] / smm_dof[k]) *
-                        scatter[k, :, :] +
+                        scatter[k, :] +
                         num_features / (smm_dof[k] * posterior_nws_scale[k])))
 
-        exp_latent = [get_exp_latent(k) for k in range(num_comp)]
-        log_resp = normalize_logspace(exp_latent)
+        exp_latent = np.array([get_exp_latent(k) for k in range(num_comp)]).T
+        log_resp = np.apply_along_axis(normalize_logspace, 1, exp_latent)
         latent_resp = exp(log_resp)
         return latent_resp
 
@@ -134,20 +134,20 @@ class _LatentVariables(HasTraits):
         return gamma_param_alpha
 
     @staticmethod
-    def _update_gamma_param_beta(posterior_nws_dof, posterior_nws_scale,
-                                 scatter):
+    def _update_gamma_param_beta(num_features, smm_dof, posterior_nws_dof,
+                                 posterior_nws_scale, scatter):
         """ Update `gamma_param_beta` """
-        num_features = np.shape(scatter)[1]
         num_comp = np.shape(posterior_nws_dof)[0]
 
-        update = lambda k: ((posterior_nws_dof[k] / 2) * scatter[k, :, :] +
+        update = lambda k: ((posterior_nws_dof[k] / 2) * scatter[k, :] +
                             num_features / (2 * posterior_nws_scale[k]) +
                             smm_dof[k] / 2)
-        gamma_param_beta = [update(k) for k in range(num_comp)]
+
+        gamma_param_beta = np.array([update(k) for k in range(num_comp)]).T
         return gamma_param_beta
 
     @staticmethod
-    def _get_scatter_(data, posterior_nws_scale_matrix_inv,
+    def _get_scatter(data, posterior_nws_scale_matrix_inv,
                       posterior_nws_mean):
         """ Compute the scatter """
         num_obs = np.shape(data)[0]
@@ -156,7 +156,7 @@ class _LatentVariables(HasTraits):
         def update(k):
             data_center = data - np.tile(posterior_nws_mean[k, :],
                                          (num_obs, 1))
-            prod = np.dot(data_center *
+            prod = np.dot(data_center,
                           posterior_nws_scale_matrix_inv[k, :, :])
             return np.sum(prod * data_center, 1)
 

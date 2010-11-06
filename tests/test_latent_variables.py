@@ -10,8 +10,8 @@ TEST_DATA_LOC = join('tests', 'data', 'old_faithful')
 
 TestUpdateLatentResp = makeTestFaithful('latent_resp.mat',
         _LatentVariables._update_latent_resp,
-        ('smm_dof', 'posterior_nws_scale', 'log_smm_mixweight',
-         'log_det_precision', 'scatter'),
+        ('smm_dof', 'posterior_nws_scale', 'posterior_nws_dof',
+         'log_smm_mixweight', 'log_det_precision', 'scatter'),
         'latent_resp', load_data=True)
 
 TestUpdateLatentScale = makeTestFaithful('latent_scale.mat',
@@ -47,9 +47,14 @@ TestUpdateGammaParamAlpha = makeTestFaithful('gamma_param_alpha.mat',
 
 TestUpdateGammaParamBeta = makeTestFaithful('gamma_param_beta.mat',
         _LatentVariables._update_gamma_param_beta,
-        ('posterior_nws_dof', 'posterior_nws_scale', 'scatter'),
+        ('num_features', 'smm_dof', 'posterior_nws_dof',
+         'posterior_nws_scale', 'scatter'),
         'gamma_param_beta', )
 
+TestGetScatter = makeTestFaithful('scatter.mat',
+        _LatentVariables._get_scatter,
+        ('posterior_nws_scale_matrix_inc', 'posterior_nws_mean'),
+        'scatter', load_data=True)
 
 if __name__ == '__main__':
     suite = unittest.TestLoader().loadTestsFromTestCase(TestUpdateLatentResp)
@@ -68,4 +73,6 @@ if __name__ == '__main__':
         unittest.TestLoader().loadTestsFromTestCase(TestUpdateGammaParamAlpha))
     suite.addTest(
         unittest.TestLoader().loadTestsFromTestCase(TestUpdateGammaParamBeta))
+    suite.addTest(
+        unittest.TestLoader().loadTestsFromTestCase(TestGetScatter))
     unittest.TextTestRunner(verbosity=2).run(suite)
