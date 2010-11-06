@@ -5,6 +5,8 @@ import numpy as np
 from numpy import log
 from numpy.linalg import cholesky
 from scipy.maxentropy import logsumexp
+from scipy.special import gammaln
+from math import pi
 
 
 def repeat(x, func, *args, **kargs):
@@ -19,6 +21,17 @@ def logdet(matrix):
     U = cholesky(matrix)
     logdet = 2 * np.sum(log(np.diag(U)))
     return logdet
+
+
+def mvt_gamma_ln(n, alpha):
+    """ Returns the log of multivariate gamma(n, alpha) value.
+    necessary for avoiding underflow/overflow problems
+    alpha > (n-1)/2
+    """
+
+    logp = (((n * (n - 1)) / 4) * log(pi) +
+            sum(gammaln(alpha + 0.5 * np.arange(0, -n, -1))))
+    return logp
 
 
 def normalize(vector):

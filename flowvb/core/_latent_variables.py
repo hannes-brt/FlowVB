@@ -121,7 +121,7 @@ class _LatentVariables(HasTraits):
         # Only passes test at max_diff = 1e-1
         # Unclear if this is Matlab's or Python's fault
         update = lambda k: (np.sum(psi((posterior_nws_dof[k] +
-                                        1 - range(num_features)) / 2)) +
+                                        1 - range(1, num_features + 1)) / 2)) +
                             num_features * log(2) -
                             logdet(posterior_nws_scale_matrix[k, :, :]))
         log_det_precision = [update(k) for k in range(num_comp)]

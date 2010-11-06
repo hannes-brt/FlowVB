@@ -25,18 +25,17 @@ TestLogDirichletConst = makeTestFaithful('log_dirichlet_const.mat',
 
 TestLogWishartConst = makeTestFaithful('log_wishart_const.mat',
     _LowerBound._log_wishart_const,
-    ('num_features', 'posterior_nws_dof',
-     'posterior_nws_scale_matrix'),
-    'log_wishart_const')
+    ('num_features', 'nws_dof', 'nws_scale_matrix'),
+    'log_wishart_const', max_diff=1)
 
 TestExpectLogPx = makeTestFaithful('expect_log_px.mat',
     _LowerBound._expect_log_px,
     ('num_obs', 'num_features', 'num_comp', 'latent_resp',
-     'latent_scale', 'latent_log_scale',
-     'posterior_nws_scale_matrix_inv', 'smm_mixweights',
-     'latent_scaled_resp', 'posterior_nws_dof',
-     'posterior_nws_scale', 'log_smm_mixweight'),
-    'expect_log_px')
+    'latent_scale', 'latent_log_scale', 'latent_scaled_resp',
+    'posterior_nws_mean', 'posterior_nws_scale_matrix_inv',
+    'posterior_nws_dof', 'posterior_nws_scale',
+    'smm_mixweights', 'log_det_precision'),
+    'expect_log_px', load_data=True)
 
 TestExpectLogPu = makeTestFaithful('expect_log_pu.mat',
     _LowerBound._expect_log_pu,
