@@ -1,5 +1,4 @@
-from enthought.traits.api import HasTraits, Int, Float, Instance
-from _prior import _Prior
+from enthought.traits.api import HasTraits, Array, Int, Float
 import numpy as np
 from numpy import log, dot
 from scipy.special import gammaln, psi
@@ -18,9 +17,7 @@ class _LowerBound(HasTraits):
     num_features = Int()
     num_comp = Int()
 
-    Prior = Instance(_Prior)
-
-    log_dirichlet_const_init = Float()  # Not sure if this is correct
+    log_dirichlet_const_init = Float()
     log_wishart_const_init = Float()
 
     log_dirichlet_norm_init = Float()
@@ -28,15 +25,112 @@ class _LowerBound(HasTraits):
 
     lower_bound = Float()
 
-    def __init__(self):
+    data = Array()
+
+    def __init__(self, data, num_obs, num_features, num_comp, Prior):
         """Initialize lower bound.
 
         """
-        pass
+        self.num_obs = num_obs
+        self.num_features = num_features
+        self.num_comp = num_comp
 
-    def update_lower_bound(self):
+        self.data = data
+
+        self.log_dirichlet_const_init = self._log_dirichlet_const(
+                                        Prior.dirichlet)
+        self.log_wishart_const_init = self._log_wishart_const(num_features,
+                                        Prior.nws_dof,
+                                        Prior.nws_scale_matrix)
+
+        self.log_dirichlet_norm_init = \
+                self.log_dirichlet_normalization_prior(num_comp,
+                                                       Prior.dirichlet)
+        self.log_dirichlet_norm = \
+                self.log_dirichlet_normalization(num_obs, num_comp,
+                                                 Prior.dirichlet)
+
+    def remove_cluster(self, indices):
+        keep_indices = self.num_comp * [True]
+        keep_indices[indices] = False
+
+        self.num_comp = self.num_comp - len(indices)
+
+    def get_lower_bound(self, ESS, Prior, Posterior, LatentVariables):
         """Update the lower bound """
-        pass
+
+        log_wishart_const = [self.log_wishart_const(self.num_features,
+                                        Posterior.nws_dof[k],
+                                        Posterior.nws_scale_matrix[k, :, :])
+                             for k in range(self.num_comp)]
+
+        expect_log_px = self._expect_log_px(self.data,
+                                            self.num_obs,
+                                            self.num_features,
+                                            self.num_comp,
+                                            LatentVariables.latent_resp,
+                                            LatentVariables.latent_scale,
+                                            LatentVariables.latent_log_scale,
+                                            LatentVariables.latent_scaled_resp,
+                                            Posterior.nws_mean,
+                                            Posterior.nws_scale_matrix_inv,
+                                            Posterior.nws_dof,
+                                            Posterior.nws_scale,
+                                            ESS.smm_mixweights,
+                                            LatentVariables.log_det_precision)
+
+        expect_log_pu = self._expect_log_pu(self.num_obs,
+                                            self.num_comp,
+                                            ESS.smm_mixweights,
+                                            LatentVariables.latent_resp,
+                                            LatentVariables.latent_log_scale,
+                                            LatentVariables.latent_scaled_resp)
+
+        expect_log_pz = self._expect_log_pz(self.num_comp,
+                                            LatentVariables.latent_resp,
+                                            LatentVariables.log_smm_mixweight)
+
+        expect_log_ptheta = self._expect_log_ptheta(self.num_comp,
+                                            self.num_features,
+                                            Prior.nws_mean,
+                                            Prior.dirichlet,
+                                            Prior.nws_mean,
+                                            Prior.nws_scale,
+                                            Prior.nws_scale_matrix,
+                                            Posterior.nws_dof,
+                                            Posterior.nws_scale,
+                                            Posterior.nws_scale_matrix_inv,
+                                            LatentVariables.log_smm_mixweight,
+                                            LatentVariables.log_det_precision,
+                                            self.log_wishart_const_init,
+                                            self.log_dirichlet_norm_init)
+
+        expect_log_qu = self._expect_log_qu(self.num_obs,
+                                            self.num_comp,
+                                            LatentVariables.gamma_param_alpha,
+                                            LatentVariables.gamma_param_alpha,
+                                            LatentVariables.latent_resp,
+                                            ESS.smm_mixweights)
+
+        expect_log_qz = self._expect_log_qz(LatentVariables.latent_resp)
+
+        expect_log_qtheta = self._expect_log_qtheta(self.num_comp,
+                                            self.num_features,
+                                            log_wishart_const,
+                                            self.log_dirichlet_norm,
+                                            Posterior.dirichlet,
+                                            Posterior.nws_scale,
+                                            Posterior.nws_dof,
+                                            Posterior.nws_scale_matrix,
+                                            LatentVariables.log_smm_mixweight,
+                                            LatentVariables.log_det_precision)
+
+        lower_bound = (expect_log_px + expect_log_pu +
+                       expect_log_pz + expect_log_ptheta +
+                       expect_log_qu + expect_log_qz +
+                       expect_log_qtheta)
+
+        return lower_bound
 
     @staticmethod
     def _log_dirichlet_normalization_prior(num_comp, prior_dirichlet):
@@ -104,8 +198,7 @@ class _LowerBound(HasTraits):
 
     @staticmethod
     def _expect_log_pu(num_obs, num_comp, smm_mixweights, smm_dof,
-                       latent_resp, latent_log_scale, latent_scaled_resp,
-                       expect_log_pu):
+                       latent_resp, latent_log_scale, latent_scaled_resp):
         """Compute `expect_log_pu` (Eq 41 in Arch2007) """
         def update(k):
             return (0.5 * num_obs * smm_mixweights[k] * smm_dof[k] *

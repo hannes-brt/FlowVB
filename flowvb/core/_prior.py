@@ -32,3 +32,11 @@ class _Prior(HasTraits):
         self.nws_scale = nws_scale
         self.nws_dof = nws_dof
         self.nws_scale_matrix = nws_scale_matrix * mat(eye(self.num_features))
+
+    def remove_clusters(self, indices):
+        keep_indices = len(self.num_comp) * [True]
+        keep_indices[indices] = False
+
+        self.num_comp = self.num_comp - len(indices)
+
+        self.dirichlet = self.dirichlet[keep_indices]

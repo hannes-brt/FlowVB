@@ -40,8 +40,7 @@ TestExpectLogPx = makeTestFaithful('expect_log_px.mat',
 TestExpectLogPu = makeTestFaithful('expect_log_pu.mat',
     _LowerBound._expect_log_pu,
     ('num_obs', 'num_comp', 'smm_mixweights', 'smm_dof',
-     'latent_resp', 'latent_log_scale', 'latent_scaled_resp',
-     'expect_log_pu'),
+     'latent_resp', 'latent_log_scale', 'latent_scaled_resp'),
     'expect_log_pu')
 
 TestExpectLogPz = makeTestFaithful('expect_log_pz.mat',

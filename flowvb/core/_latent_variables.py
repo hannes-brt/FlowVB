@@ -26,6 +26,8 @@ class _LatentVariables(HasTraits):
     gamma_param_alpha = Array()
     gamma_param_beta = Array()
 
+    data = Array()
+
     def __init__(self, data, num_comp):
         """Initialize latent variables.
 
@@ -45,18 +47,64 @@ class _LatentVariables(HasTraits):
         self.gamma_param_alpha = np.nan * np.zeros(self.num_comp)
         self.gamma_param_beta = np.nan * np.zeros(self.num_obs, self.num_comp)
 
-    def update_parameters(self):
+        self.data = data
+
+    def update_parameters(self, Posterior):
         """Update latent variables.
 
         """
-        pass
 
-    def remove_clusters(self):
+        scatter = self._get_scatter(self.data,
+                            Posterior.nws_scale_matrix_inv,
+                            Posterior.nws_mean)
+
+        self.log_smm_mixweight = self._update_log_smm_mixweight(
+                            Posterior.dirichlet)
+
+        self.log_det_precision = self._update_log_det_precision(
+                            self.num_features,
+                            self.num_comp,
+                            Posterior.nws_dof,
+                            Posterior.nws_scale_matrix)
+
+        self.latent_resp = self._update_latent_resp(self.data,
+                            Posterior.smm_dof,
+                            Posterior.nws_scale,
+                            Posterior.nws_dof,
+                            self.log_smm_mixweight,
+                            self.log_det_precision,
+                            scatter)
+
+        self.latent_scale = self._update_latent_scale(self.gamma_param_alpha,
+                            self.gamma_param_beta)
+
+        self.latent_log_scale = self._update_latent_log_scale(
+                            self.gamma_param_alpha,
+                            self.gamma_param_beta)
+
+        self.latent_scaled_resp = self._update_latent_scaled_resp(self.num_obs,
+                            self.latent_resp,
+                            self.latent_scale)
+
+    def remove_clusters(self, indices):
         """Remove clusters with insufficient support.
 
         """
+        keep_indices = self.num_comp * [True]
+        keep_indices[indices] = False
 
-        pass
+        self.num_comp = self.num_comp - len(indices)
+
+        self.latent_resp = self.latent_resp[:, keep_indices]
+        self.latent_scale = self.latent_scale[:, keep_indices]
+        self.latent_log_scale = self.latent_log_scale[:, keep_indices]
+        self.latent_scaled_resp = self.latent_scaled_resp[:, keep_indices]
+
+        self.log_smm_mixweight = self.log_smm_mixweight[keep_indices]
+        self.log_det_precision = self.log_det_precision[keep_indices]
+
+        self.gamma_param_alpha = self.gamma_param_alpha[keep_indices]
+        self.gamma_param_beta = self.gamma_param_beta[:, keep_indices]
 
     @staticmethod
     def _update_latent_resp(data, smm_dof, posterior_nws_scale,

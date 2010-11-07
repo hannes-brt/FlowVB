@@ -1,9 +1,9 @@
 from math import log
 import numpy as np
+from numpy.linalg import inv
 from scipy.special import psi
 from scipy.optimize import fsolve
-from enthought.traits.api import HasTraits, Array, Float, Int, Bool, Instance
-from _prior import _Prior
+from enthought.traits.api import HasTraits, Array, Float, Int, Bool
 
 
 class _Posterior(HasTraits):
@@ -14,8 +14,6 @@ class _Posterior(HasTraits):
     num_obs = Int()
     num_comp = Int()
     num_features = Int()
-
-    Prior = Instance(_Prior)
 
     dirichlet = Array()
     nws_mean = Array()
@@ -34,8 +32,6 @@ class _Posterior(HasTraits):
 
         """
 
-        self.Prior = Prior
-
         self.num_obs = Prior.num_obs
         self.num_features = Prior.num_features
         self.num_comp = num_comp
@@ -52,17 +48,74 @@ class _Posterior(HasTraits):
         self.nws_scale_matrix = [Prior.nws_scale_matrix
                                  for k in range(self.num_comp)]
 
-    def update_parameters():
+        self.nws_scale_matrix_inv = [inv(self.nws_scale_matrix[k, :, :])
+                                         for k in range(self.num_comp)]
+
+    def update_parameters(self, Prior, ESS, LatentVariables):
         """Update posterior parameters.
 
         """
-        pass
+        self.dirichlet = self._update_dirichlet(self.num_comp,
+                            ESS.smm_mixweights,
+                            Prior.dirichlet)
 
-    def remove_clusters():
+        self.nws_scale = self._update_nws_scale(self.num_obs,
+                            LatentVariables.latent_scaled_resp,
+                            Prior.nws_scale)
+
+        self.nws_mean = self._update_nws_mean(self.num_obs,
+                            self.num_comp,
+                            LatentVariables.latent_scaled_resp,
+                            ESS.smm_mean,
+                            Prior.nws_scale,
+                            self.nws_scale,
+                            Prior.nws_mean)
+
+        self.nws_dof = self._update_nws_dof(self.num_comp,
+                            ESS.smm_mixweights,
+                            Prior.nws_dof)
+
+        self.nws_scale_matrix = self._update_nws_scale(self.num_obs,
+                            self.num_comp,
+                            ESS.smm_mean,
+                            Prior.nws_mean,
+                            LatentVariables.latent_scaled_resp,
+                            ESS.smm_covar,
+                            Prior.nws_scale,
+                            self.nws_scale,
+                            Prior.nws_scale_matrix)
+
+        self.nws_scale_matrix_inv = [inv(self.nws_scale_matrix[k, :, :])
+                                     for k in range(self.num_comp)]
+
+        self.smm_dof = self._update_smm_dof(self.smm_dof,
+                            self.num_obs,
+                            self.num_comp,
+                            ESS.smm_mixweights,
+                            LatentVariables.latent_resp,
+                            LatentVariables.latent_scale,
+                            LatentVariables.latent_log_scale)
+
+    def remove_clusters(self, indices):
         """Remove clusters with insufficient support.
 
         """
-        pass
+        keep_indices = self.num_comp * [True]
+        keep_indices[indices] = False
+
+        self.num_comp = self.num_comp - len(indices)
+
+        self.dirichlet = self.dirichlet[keep_indices]
+        self.nws_scale = self.nws_scale[keep_indices]
+        self.nws_dof = self.dof[keep_indices]
+        self.nws_mean = self.nws_mean[keep_indices, :]
+
+        self.smm_dof = self.smm_dof[keep_indices]
+        self.smm_dof_init = self.smm_dof_init[keep_indices]
+
+        self.nws_scale_matrix = self.nws_scale_matrix[keep_indices, :, :]
+        self.nws_scale_matrix_inv = \
+                                  self.nws_scale_matrix_inv[keep_indices, :, :]
 
     @staticmethod
     def _update_dirichlet(num_obs,
