@@ -3,7 +3,7 @@ import numpy as np
 from numpy import log, exp
 from scipy.special import gammaln, psi
 from math import pi
-from flowvb.utils import logdet, normalize_logspace
+from flowvb.utils import logdet, normalize_logspace, ind_retain_elements
 
 
 class _LatentVariables(HasTraits):
@@ -28,7 +28,7 @@ class _LatentVariables(HasTraits):
 
     data = Array()
 
-    def __init__(self, data, num_comp):
+    def __init__(self, data, ESS, num_comp):
         """Initialize latent variables.
 
         """
@@ -37,15 +37,18 @@ class _LatentVariables(HasTraits):
         self.num_features = data.shape[1]
         self.num_comp = num_comp
 
-        self.latent_resp = np.nan * np.zeros(self.num_obs, self, num_comp)
-        self.latent_scale = np.nan * np.zeros(self.num_obs, self.num_comp)
-        self.latent_log_scale = np.nan * np.zeros(self.num_obs, self.num_comp)
+        self.latent_resp = np.nan * np.zeros([self.num_obs, self.num_comp])
+        self.latent_scale = np.ones([self.num_obs, self.num_comp])
+        self.latent_log_scale = (np.nan * np.
+                                 zeros([self.num_obs, self.num_comp]))
+        self.latent_scaled_resp = ESS.smm_mixweights
 
-        self.log_smm_mixweight = np.nan * np.zeros(self.num_comp)
-        self.log_det_precision = np.nan * np.zeros(self.num_comp)
+        self.log_smm_mixweight = np.nan * np.zeros([self.num_comp])
+        self.log_det_precision = np.nan * np.zeros([self.num_comp])
 
-        self.gamma_param_alpha = np.nan * np.zeros(self.num_comp)
-        self.gamma_param_beta = np.nan * np.zeros(self.num_obs, self.num_comp)
+        self.gamma_param_alpha = np.nan * np.zeros([self.num_comp])
+        self.gamma_param_beta = (np.nan *
+                                 np.zeros([self.num_obs, self.num_comp]))
 
         self.data = data
 
@@ -66,6 +69,17 @@ class _LatentVariables(HasTraits):
                             self.num_comp,
                             Posterior.nws_dof,
                             Posterior.nws_scale_matrix)
+
+        self.gamma_param_alpha = self._update_gamma_param_alpha(
+                            self.num_features,
+                            Posterior.smm_dof)
+
+        self.gamma_param_beta = self._update_gamma_param_beta(
+                            self.num_features,
+                            Posterior.smm_dof,
+                            Posterior.nws_dof,
+                            Posterior.nws_scale,
+                            scatter)
 
         self.latent_resp = self._update_latent_resp(self.data,
                             Posterior.smm_dof,
@@ -90,8 +104,7 @@ class _LatentVariables(HasTraits):
         """Remove clusters with insufficient support.
 
         """
-        keep_indices = self.num_comp * [True]
-        keep_indices[indices] = False
+        keep_indices = ind_retain_elements(indices, self.num_comp)
 
         self.num_comp = self.num_comp - len(indices)
 
@@ -206,5 +219,5 @@ class _LatentVariables(HasTraits):
                           posterior_nws_scale_matrix_inv[k, :, :])
             return np.sum(prod * data_center, 1)
 
-        scatter = [update(k) for k in range(num_comp)]
+        scatter = np.array([update(k) for k in range(num_comp)])
         return scatter

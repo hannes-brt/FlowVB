@@ -23,7 +23,7 @@ class _LowerBound(HasTraits):
     log_dirichlet_norm_init = Float()
     log_dirichlet_norm = Float()
 
-    lower_bound = Float()
+    lower_bound = Array()
 
     data = Array()
 
@@ -44,22 +44,19 @@ class _LowerBound(HasTraits):
                                         Prior.nws_scale_matrix)
 
         self.log_dirichlet_norm_init = \
-                self.log_dirichlet_normalization_prior(num_comp,
+                self._log_dirichlet_normalization_prior(num_comp,
                                                        Prior.dirichlet)
         self.log_dirichlet_norm = \
-                self.log_dirichlet_normalization(num_obs, num_comp,
+                self._log_dirichlet_normalization(num_obs, num_comp,
                                                  Prior.dirichlet)
 
-    def remove_cluster(self, indices):
-        keep_indices = self.num_comp * [True]
-        keep_indices[indices] = False
-
+    def remove_clusters(self, indices):
         self.num_comp = self.num_comp - len(indices)
 
     def get_lower_bound(self, ESS, Prior, Posterior, LatentVariables):
         """Update the lower bound """
 
-        log_wishart_const = [self.log_wishart_const(self.num_features,
+        log_wishart_const = [self._log_wishart_const(self.num_features,
                                         Posterior.nws_dof[k],
                                         Posterior.nws_scale_matrix[k, :, :])
                              for k in range(self.num_comp)]
@@ -82,6 +79,7 @@ class _LowerBound(HasTraits):
         expect_log_pu = self._expect_log_pu(self.num_obs,
                                             self.num_comp,
                                             ESS.smm_mixweights,
+                                            Posterior.smm_dof,
                                             LatentVariables.latent_resp,
                                             LatentVariables.latent_log_scale,
                                             LatentVariables.latent_scaled_resp)
@@ -94,9 +92,10 @@ class _LowerBound(HasTraits):
                                             self.num_features,
                                             Prior.nws_mean,
                                             Prior.dirichlet,
-                                            Prior.nws_mean,
+                                            Prior.nws_dof,
                                             Prior.nws_scale,
                                             Prior.nws_scale_matrix,
+                                            Posterior.nws_mean,
                                             Posterior.nws_dof,
                                             Posterior.nws_scale,
                                             Posterior.nws_scale_matrix_inv,
@@ -108,7 +107,7 @@ class _LowerBound(HasTraits):
         expect_log_qu = self._expect_log_qu(self.num_obs,
                                             self.num_comp,
                                             LatentVariables.gamma_param_alpha,
-                                            LatentVariables.gamma_param_alpha,
+                                            LatentVariables.gamma_param_beta,
                                             LatentVariables.latent_resp,
                                             ESS.smm_mixweights)
 
@@ -125,25 +124,24 @@ class _LowerBound(HasTraits):
                                             LatentVariables.log_smm_mixweight,
                                             LatentVariables.log_det_precision)
 
-        lower_bound = (expect_log_px + expect_log_pu +
-                       expect_log_pz + expect_log_ptheta +
-                       expect_log_qu + expect_log_qz +
-                       expect_log_qtheta)
-
-        return lower_bound
+        self.lower_bound = np.append(self.lower_bound,
+                                     expect_log_px + expect_log_pu +
+                                     expect_log_pz + expect_log_ptheta +
+                                     expect_log_qu + expect_log_qz +
+                                     expect_log_qtheta)
 
     @staticmethod
     def _log_dirichlet_normalization_prior(num_comp, prior_dirichlet):
         """Compute the normalization constant for the dirichlet distribution"""
         log_dirichlet_normalization_prior = gammaln(num_comp *
-                                                    prior_dirichlet[0])
+                                                    prior_dirichlet)
         return log_dirichlet_normalization_prior
 
     @staticmethod
     def _log_dirichlet_normalization(num_obs, num_comp, prior_dirichlet):
         """Compute the normalization constant for the dirichlet distribution"""
         log_dirichlet_normalization = gammaln(num_obs +
-                                              num_comp * prior_dirichlet[0])
+                                              num_comp * prior_dirichlet)
         return log_dirichlet_normalization
 
     @staticmethod

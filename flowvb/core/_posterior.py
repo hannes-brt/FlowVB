@@ -4,6 +4,7 @@ from numpy.linalg import inv
 from scipy.special import psi
 from scipy.optimize import fsolve
 from enthought.traits.api import HasTraits, Array, Float, Int, Bool
+from flowvb.utils import ind_retain_elements
 
 
 class _Posterior(HasTraits):
@@ -37,8 +38,7 @@ class _Posterior(HasTraits):
         self.num_comp = num_comp
 
         self.dirichlet = Prior.dirichlet * np.ones(self.num_comp)
-        self.nws_mean = Prior.nws_mean * np.ones((self.num_comp,
-                                                  self.num_features))
+        self.nws_mean = np.tile(Prior.nws_mean, (self.num_comp, 1))
         self.nws_scale = Prior.nws_scale * np.ones(self.num_comp)
         self.nws_dof = Prior.nws_dof * np.ones(self.num_comp)
 
@@ -75,7 +75,7 @@ class _Posterior(HasTraits):
                             ESS.smm_mixweights,
                             Prior.nws_dof)
 
-        self.nws_scale_matrix = self._update_nws_scale(self.num_obs,
+        self.nws_scale_matrix = self._update_nws_scale_matrix(self.num_obs,
                             self.num_comp,
                             ESS.smm_mean,
                             Prior.nws_mean,
@@ -100,18 +100,16 @@ class _Posterior(HasTraits):
         """Remove clusters with insufficient support.
 
         """
-        keep_indices = self.num_comp * [True]
-        keep_indices[indices] = False
+        keep_indices = ind_retain_elements(indices, self.num_comp)
 
         self.num_comp = self.num_comp - len(indices)
 
         self.dirichlet = self.dirichlet[keep_indices]
         self.nws_scale = self.nws_scale[keep_indices]
-        self.nws_dof = self.dof[keep_indices]
+        self.nws_dof = self.nws_dof[keep_indices]
         self.nws_mean = self.nws_mean[keep_indices, :]
 
         self.smm_dof = self.smm_dof[keep_indices]
-        self.smm_dof_init = self.smm_dof_init[keep_indices]
 
         self.nws_scale_matrix = self.nws_scale_matrix[keep_indices, :, :]
         self.nws_scale_matrix_inv = \
@@ -177,7 +175,7 @@ class _Posterior(HasTraits):
             scatter = np.outer((smm_mean[k, :] - prior_nws_mean),
                       (smm_mean[k, :] - prior_nws_mean))
             return (num_obs * scaled_resp[k] *
-                    smm_covar[:, :, k] +
+                    smm_covar[k, :, :] +
                     (num_obs * scaled_resp[k] *
                      prior_nws_scale) /
                     nws_scale[k] * scatter + prior_nws_scale_matrix)

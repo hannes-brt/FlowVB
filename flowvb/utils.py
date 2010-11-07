@@ -18,6 +18,7 @@ def repeat(x, func, *args, **kargs):
 def logdet(matrix):
     """Computes the log of the determinant of a matrix
     """
+
     U = cholesky(matrix)
     logdet = 2 * np.sum(log(np.diag(U)))
     return logdet
@@ -74,3 +75,20 @@ def arrays_almost_equal(a, b, accuracy=1e-3):
         return (d < accuracy).all()
     except TypeError:
         return False
+
+
+def element_weights(a):
+    """Returns the proportions with which every element in a vector occurs
+    """
+    elements = range(max(a) + 1)
+    a = np.array(a)
+
+    mixweights = np.array([float(np.sum(a == x)) / len(a)
+                           for x in elements])
+    return mixweights
+
+
+def ind_retain_elements(indices, num_comp):
+    keep_indices = set(range(num_comp))
+    keep_indices = list(keep_indices - indices)
+    return keep_indices

@@ -1,5 +1,6 @@
 from enthought.traits.api import HasTraits, Int, Array
 import numpy as np
+from flowvb.utils import ind_retain_elements
 
 
 class _ESS(HasTraits):
@@ -61,8 +62,7 @@ class _ESS(HasTraits):
         """Remove clusters with insufficient support.
 
         """
-        keep_indices = self.num_comp * [True]
-        keep_indices[indices] = False
+        keep_indices = ind_retain_elements(indices, self.num_comp)
 
         self.num_comp = self.num_comp - len(indices)
 
@@ -75,7 +75,6 @@ class _ESS(HasTraits):
     def _update_smm_mean(data, num_obs, num_comp, latent_scaled_resp,
                          latent_resp, latent_scale):
         """Update `smm_mean` (Eq 32 in Arch2007) """
-
         smm_mean = [np.sum([latent_resp[n, k] * latent_scale[n, k] * data[n, :]
                     for n in range(num_obs)], 0)
                     / (num_obs * latent_scaled_resp[k])
