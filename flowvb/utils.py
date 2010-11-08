@@ -6,7 +6,10 @@ from numpy import log
 from numpy.linalg import cholesky
 from scipy.maxentropy import logsumexp
 from scipy.special import gammaln
+import math
 from math import pi
+from matplotlib.patches import Ellipse
+from pylab import gca
 
 
 def repeat(x, func, *args, **kargs):
@@ -92,3 +95,35 @@ def ind_retain_elements(indices, num_comp):
     keep_indices = set(range(num_comp))
     keep_indices = list(keep_indices - indices)
     return keep_indices
+
+
+def plot_ellipse(pos, P, edge='black', face='none'):
+    """Plots an error ellipse.
+
+    By Tinne De Laet
+    <http://www.mail-archive.com/matplotlib-users@lists.sourceforge.net/
+    msg14153.html>
+
+    Parameters
+    ----------
+    pos : array_like
+       A two-element vector giving the center of the ellipse.
+    P : array_like
+       A (2x2)-dimensional covariance matrix.
+    edge : color_specification
+    face: color_specification
+
+    Returns
+    -------
+    ellipse : matplotlib.patches.Ellipse-object
+
+    """
+    U, s, Vh = np.linalg.svd(P)
+    orient = math.atan2(U[1, 0], U[0, 0]) * 180 / pi
+    ellipsePlot = Ellipse(xy=pos, width=2.0 * math.sqrt(s[0]),
+                          height=2.0 * math.sqrt(s[1]),
+                          angle=orient, facecolor=face,
+                          edgecolor=edge)
+    ax = gca()
+    ax.add_patch(ellipsePlot)
+    return ellipsePlot

@@ -6,7 +6,9 @@ from flowvb.core._latent_variables import _LatentVariables
 from flowvb.core._lower_bound import _LowerBound
 from flowvb.core._posterior import _Posterior
 from flowvb.core._prior import _Prior
-from flowvb.utils import element_weights
+from flowvb.utils import element_weights, plot_ellipse
+import matplotlib.pyplot as plt
+from pylab import gca
 
 EPS = np.finfo(np.float).eps
 
@@ -39,6 +41,8 @@ class FlowVB(HasTraits):
 
         if whiten_data:
             data = whiten(data)
+
+        self.data = data
 
         # Initialize with k-means
         (centroids, labels) = kmeans2(data, num_comp_init)
@@ -104,6 +108,19 @@ class FlowVB(HasTraits):
         self.LatentVariables = LatentVariables
         self.ESS = ESS
         self.LowerBound = LowerBound
+
+    def plot_clustering_ellipses(self, Posterior=None, dims=[0, 1]):
+        if Posterior is None:
+            Posterior = self.Posterior
+
+        plt.plot(self.data[:, dims[0]], self.data[:, dims[1]], 'o', ls='none')
+
+        for k in range(Posterior.num_comp):
+            pos = Posterior.nws_mean[k, :]
+            cov = Posterior.nws_scale_matrix[k, :, :]
+            plot_ellipse(pos, cov, edge='red')
+
+        plt.show()
 
     @staticmethod
     def convergence_test(LowerBound, thresh=1e-4):
