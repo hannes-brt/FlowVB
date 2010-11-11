@@ -55,7 +55,7 @@ class _Posterior(HasTraits):
         """Update posterior parameters.
 
         """
-        self.dirichlet = self._update_dirichlet(self.num_comp,
+        self.dirichlet = self._update_dirichlet(self.num_obs,
                             ESS.smm_mixweights,
                             Prior.dirichlet)
 
@@ -71,7 +71,7 @@ class _Posterior(HasTraits):
                             self.nws_scale,
                             Prior.nws_mean)
 
-        self.nws_dof = self._update_nws_dof(self.num_comp,
+        self.nws_dof = self._update_nws_dof(self.num_obs,
                             ESS.smm_mixweights,
                             Prior.nws_dof)
 

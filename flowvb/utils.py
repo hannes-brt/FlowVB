@@ -7,7 +7,7 @@ from numpy.linalg import cholesky
 from scipy.maxentropy import logsumexp
 from scipy.special import gammaln
 import math
-from math import pi
+from math import pi, sqrt
 from matplotlib.patches import Ellipse
 from pylab import gca
 
@@ -127,3 +127,20 @@ def plot_ellipse(pos, P, edge='black', face='none'):
     ax = gca()
     ax.add_patch(ellipsePlot)
     return ellipsePlot
+
+
+def classify_by_distance(data, mean, covar):
+    K = mean.shape[0]
+
+    covar_inv = np.array([np.linalg.inv(covar[k, :, :]) for k in range(K)])
+
+    def mahal_dist(x, k):
+        return sqrt(np.dot(np.dot((x - mean[k, :]).T, covar_inv[k, :, :]),
+                    (x - mean[k, :])))
+
+    def classify_point(x):
+        dist = np.array([mahal_dist(x, k) for k in range(K)])
+        return np.nonzero(dist == min(dist))[0]
+
+    labels = np.apply_along_axis(classify_point, 1, data)
+    return labels
