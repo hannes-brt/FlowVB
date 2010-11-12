@@ -28,7 +28,8 @@ class TestPrior(unittest.TestCase):
         self.assertEqual(PriorObj.num_comp, num_comp)
         self.assertEqual(PriorObj.num_features, num_features)
         self.assertEqual(PriorObj.dirichlet, prior_dirichlet)
-        self.assertEqual(PriorObj.nws_mean, nws_mean)
+        [self.assertEqual(PriorObj.nws_mean[i], nws_mean)
+         for i in range(num_features)]
         self.assertEqual(PriorObj.nws_scale, nws_scale)
         self.assertEqual(PriorObj.nws_dof, nws_dof)
         [[self.assertEqual(PriorObj.nws_scale_matrix[i, j],
