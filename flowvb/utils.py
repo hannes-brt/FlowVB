@@ -32,7 +32,7 @@ def mvt_gamma_ln(n, alpha):
     necessary for avoiding underflow/overflow problems
     alpha > (n-1)/2
     """
-
+    n = float(n)
     logp = (((n * (n - 1)) / 4) * log(pi) +
             sum(gammaln(alpha + 0.5 * np.arange(0, -n, -1))))
     return logp

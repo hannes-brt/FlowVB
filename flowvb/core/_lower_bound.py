@@ -126,8 +126,8 @@ class _LowerBound(HasTraits):
 
         self.lower_bound = np.append(self.lower_bound,
                                      expect_log_px + expect_log_pu +
-                                     expect_log_pz + expect_log_ptheta +
-                                     expect_log_qu + expect_log_qz +
+                                     expect_log_pz + expect_log_ptheta -
+                                     expect_log_qu - expect_log_qz -
                                      expect_log_qtheta)
 
     @staticmethod
@@ -157,7 +157,7 @@ class _LowerBound(HasTraits):
         """Compute `log_wishart_const_init` """
         log_wishart_const = ((nws_dof / 2) * logdet(nws_scale_matrix) -
                                (nws_dof * num_features / 2) * log(2) -
-                               mvt_gamma_ln(int(num_features), nws_dof / 2))
+                               mvt_gamma_ln(num_features, nws_dof / 2))
         return log_wishart_const
 
     @staticmethod
