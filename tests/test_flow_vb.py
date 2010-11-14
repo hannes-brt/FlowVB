@@ -12,18 +12,17 @@ class TestFaithul(unittest.TestCase):
         self.data = loadmat(join(TEST_DATA_LOC, 'faithful.mat'))['data']
         self.init = loadmat(join(TEST_DATA_LOC, 'faithful_init.mat'),
                             squeeze_me=True)
-
-    def testMean(self):
-        result = loadmat(join(TEST_DATA_LOC, 'faithful_final_mean.mat'),
-                         squeeze_me=True)
-
-        model = FlowVB(self.data,
+        self.model = FlowVB(self.data,
                        init_mean=self.init['init_mean'],
                        init_covar=self.init['init_covar'],
                        init_mixweights=self.init['init_mixweights'],
                        thresh=1e-5, max_iter=200, verbose=False)
 
-        approx_equal = arrays_almost_equal(model.ESS.smm_mean,
+    def testMean(self):
+        result = loadmat(join(TEST_DATA_LOC, 'faithful_final_mean.mat'),
+                         squeeze_me=True)
+
+        approx_equal = arrays_almost_equal(self.model.ESS.smm_mean,
                                            result['smm_mean'],
                                            accuracy=1e-1)
 
