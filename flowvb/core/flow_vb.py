@@ -6,8 +6,10 @@ from flowvb.core._latent_variables import _LatentVariables
 from flowvb.core._lower_bound import _LowerBound
 from flowvb.core._posterior import _Posterior
 from flowvb.core._prior import _Prior
+from flowvb.core._monitor_plot import _MonitorPlot
 from flowvb.utils import element_weights, plot_ellipse, classify_by_distance
 import matplotlib.pyplot as plt
+import wx
 import pudb
 
 EPS = np.finfo(np.float).eps
@@ -35,7 +37,8 @@ class FlowVB(HasTraits):
                  prior_dirichlet=1e-3,
                  dof_init=2,
                  remove_comp_thresh=1e-2,
-                 whiten_data=False):
+                 whiten_data=False,
+                 plot_monitor=False):
         """Fit the model to the data using Variational Bayes
 
         """
@@ -85,6 +88,9 @@ class FlowVB(HasTraits):
         iteration = 1
         done = False
 
+        if plot_monitor:
+            self._plot_monitor_init()
+
         while not done:
 
             # Update parameters
@@ -99,6 +105,9 @@ class FlowVB(HasTraits):
 
             done = converged or (iteration >= max_iter)
 
+            if plot_monitor:
+                self._plot_monitor_update(ESS)
+
             if verbose:
                 print('iteration %d, lower bound: %f' %
                       (iteration, LowerBound.lower_bound[-1]))
@@ -111,6 +120,7 @@ class FlowVB(HasTraits):
         self.LatentVariables = LatentVariables
         self.ESS = ESS
         self.LowerBound = LowerBound
+        self.app.MainLoop()
 
     def plot_clustering_ellipses(self, ESS=None, dims=[0, 1], scale=1):
         if ESS is None:
@@ -125,6 +135,15 @@ class FlowVB(HasTraits):
             plot_ellipse(pos, cov, edge='red')
 
         plt.show()
+
+    def _plot_monitor_init(self):
+        self.app = wx.App(False)
+        self.frame = _MonitorPlot(self.data)
+        self.frame.Show(True)
+        self.app.Dispatch()
+
+    def _plot_monitor_update(self, ESS):
+        self.frame.update_plot(ESS.smm_mean, ESS.smm_covar)
 
     @staticmethod
     def _remove_empty_clusters(Prior, LatentVariables, ESS, Posterior,
