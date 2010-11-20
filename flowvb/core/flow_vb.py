@@ -30,7 +30,7 @@ class FlowVB(HasTraits):
                  num_comp_init=10,
                  max_iter=200,
                  thresh=1e-5,
-                 verbose=True,
+                 verbose=False,
                  init_mean=None,
                  init_covar=None,
                  init_mixweights=None,
@@ -120,7 +120,10 @@ class FlowVB(HasTraits):
         self.LatentVariables = LatentVariables
         self.ESS = ESS
         self.LowerBound = LowerBound
-        self.app.MainLoop()
+
+        # Call main loop of wxFrame to keep the window from closing
+        if plot_monitor:
+            self.app.MainLoop()
 
     def plot_clustering_ellipses(self, ESS=None, dims=[0, 1], scale=1):
         if ESS is None:
