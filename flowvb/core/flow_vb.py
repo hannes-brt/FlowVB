@@ -123,6 +123,7 @@ class FlowVB(HasTraits):
 
         # Call main loop of wxFrame to keep the window from closing
         if plot_monitor:
+            self.frame.end_of_iteration()
             self.app.MainLoop()
 
     def plot_clustering_ellipses(self, ESS=None, dims=[0, 1], scale=1):
