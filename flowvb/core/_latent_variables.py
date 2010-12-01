@@ -124,7 +124,6 @@ class _LatentVariables(HasTraits):
                             posterior_nws_dof, log_smm_mixweight,
                             log_det_precision, scatter):
         """ Update `latent_resp` (Eq 22 in Arch2007) """
-        num_obs = data.shape[0]
         num_features = data.shape[1]
         num_comp = len(log_smm_mixweight)
 
@@ -139,10 +138,8 @@ class _LatentVariables(HasTraits):
                         num_features / (smm_dof[k] * posterior_nws_scale[k])))
 
         exp_latent = np.array([get_exp_latent(k) for k in range(num_comp)]).T
-        log_resp = np.array([normalize_logspace(exp_latent[i, :])
-                             for i in range(num_obs)])
 
-        latent_resp = exp(log_resp)
+        latent_resp = normalize_logspace(exp_latent)
         return latent_resp
 
     @staticmethod
