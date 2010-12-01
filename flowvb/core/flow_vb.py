@@ -1,6 +1,5 @@
 from enthought.traits.api import HasTraits, Instance
 import numpy as np
-from numpy.random import uniform
 from scipy.cluster.vq import whiten, kmeans2
 from flowvb.core._ess import _ESS
 from flowvb.core._latent_variables import _LatentVariables
@@ -11,6 +10,7 @@ from flowvb.core._monitor_plot import _MonitorPlot
 from flowvb.utils import element_weights, plot_ellipse, classify_by_distance
 import matplotlib.pyplot as plt
 import wx
+import pudb
 
 EPS = np.finfo(np.float).eps
 
@@ -34,7 +34,6 @@ class FlowVB(HasTraits):
                  init_mean=None,
                  init_covar=None,
                  init_mixweights=None,
-                 init_method='kmeans',
                  prior_dirichlet=1e-3,
                  dof_init=2,
                  remove_comp_thresh=1e-2,
@@ -52,17 +51,13 @@ class FlowVB(HasTraits):
         self.data = data
         self.remove_comp_thresh = remove_comp_thresh
 
-        # Choose method to intialize the parameters
-        if init_method == 'kmeans':
-            init_method = self._init_kmeans
-        elif init_method == 'random':
-            init_method = self._init_random
-
         if init_mean is None:
             # No starting solution was supplied
-            # Initialize with `init_method`
-            (init_mean, labels, init_covar, init_mixweights) = \
-                        init_method(num_comp_init)
+            # Initialize with k-means
+            (init_mean, labels) = kmeans2(data, num_comp_init)
+            init_covar = self._get_covar(data, labels)
+            init_mixweights = element_weights(labels)
+
         else:
             # Starting solution was supplied
             num_comp_init = init_mean.shape[0]
@@ -128,11 +123,10 @@ class FlowVB(HasTraits):
 
         # Call main loop of wxFrame to keep the window from closing
         if plot_monitor:
+            self.frame.end_of_iteration()
             self.app.MainLoop()
 
     def plot_clustering_ellipses(self, ESS=None, dims=[0, 1], scale=1):
-        """Make a scatterplot of the data with error ellipses
-        """
         if ESS is None:
             ESS = self.ESS
 
@@ -147,49 +141,18 @@ class FlowVB(HasTraits):
         plt.show()
 
     def _plot_monitor_init(self):
-        """Initialize plot monitor
-        """
         self.app = wx.App(False)
         self.frame = _MonitorPlot(self.data)
         self.frame.Show(True)
         self.app.Dispatch()
 
     def _plot_monitor_update(self, ESS):
-        """Update plot monitor
-        """
         self.frame.update_plot(ESS.smm_mean, ESS.smm_covar)
-
-    def _init_kmeans(self, num_comp):
-        """Initialize using k-means
-        """
-        (init_mean, labels) = kmeans2(self.data, num_comp)
-        init_covar = self._get_covar(self.data, labels)
-        init_mixweights = element_weights(labels)
-        return (init_mean, labels, init_covar, init_mixweights)
-
-    def _init_random(self, num_comp):
-        """Initialize randomly
-        """
-        D = self.data.shape[1]
-        data_lims = np.array([[self.data[:, d].min(), self.data[:, d].max()]
-                              for d in range(D)])
-
-        init_mean = np.array([uniform(*data_lims[d, :], size=num_comp)
-                              for d in range(D)]).T
-
-        covar_init = np.repeat([np.diag([1] * D)], num_comp, 0)
-
-        labels = classify_by_distance(self.data, init_mean,
-                                      covar_init).flatten()
-        init_covar = self._get_covar(self.data, labels)
-        init_mixweights = element_weights(labels)
-        return (init_mean, labels, init_covar, init_mixweights)
 
     @staticmethod
     def _remove_empty_clusters(Prior, LatentVariables, ESS, Posterior,
                              LowerBound, remove_comp_thresh):
-        """Remove components with insufficient support from the model
-        """
+
         empty_cluster_indices = np.nonzero(
             ESS.smm_mixweights < remove_comp_thresh)[0]
         empty_cluster_indices = set(empty_cluster_indices)
@@ -202,9 +165,6 @@ class FlowVB(HasTraits):
             LowerBound.remove_clusters(empty_cluster_indices)
 
     def _update_step(self, Prior, Posterior, ESS, LatentVariables, LowerBound):
-        """Update the paramters
-        """
-
         # E-step
         LatentVariables.update_parameters(Posterior)
 
@@ -224,8 +184,6 @@ class FlowVB(HasTraits):
 
     @staticmethod
     def _convergence_test(LowerBound, thresh=1e-4):
-        """Test if iteration has converged
-        """
         converged = False
 
         fval = LowerBound.lower_bound[-1]
@@ -240,13 +198,11 @@ class FlowVB(HasTraits):
 
     @staticmethod
     def _get_covar(data, labels, *args, **kargs):
-        """Compute the covariance in all clusters
-        """
         elements = range(max(labels) + 1)
 
         def covar(m):
             # Make sure, a dxd-matrix is returned, even when there are
-            # only zero or one observations
+            # only zero one observations
             if len(m.shape) > 1:
                 d, n = m.shape
             elif len(m.shape) == 1:
