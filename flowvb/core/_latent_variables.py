@@ -1,9 +1,11 @@
 from enthought.traits.api import HasTraits, Int, Array
 import numpy as np
-from numpy import log, exp
+from numpy import log
 from scipy.special import gammaln, psi
 from math import pi
-from flowvb.utils import logdet, normalize_logspace, ind_retain_elements
+from flowvb.utils import logdet, ind_retain_elements
+from flowvb.utils import normalize_logspace
+# from flowvb.cython_utils import normalize_logspace
 
 
 class _LatentVariables(HasTraits):
