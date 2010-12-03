@@ -4,7 +4,6 @@
 import numpy as np
 from numpy import log
 from numpy.linalg import cholesky
-from scipy.maxentropy import logsumexp
 from scipy.special import gammaln
 import math
 from math import pi, sqrt
@@ -45,10 +44,29 @@ def normalize(vector):
     return np.array(vector) / sum(vector)
 
 
-def normalize_logspace(a):
-    """Normalize the vector `a` in logspace """
-    L = logsumexp(a)
-    return a - L
+def normalize_logspace(mat):
+    """ Normalizes the rows of a matrix while avoiding numerical underflow
+    """
+
+    L = logsumexp(mat)
+    d = mat.shape[1]
+    return np.exp(mat - np.tile(L, (d, 1)).T)
+
+
+def logsumexp(mat, dim=1):
+    """ Returns log(sum(exp(a))) while avoiding numerical underflow
+
+    """
+    max_dim = np.max(mat, dim)                      # Maximum of each row
+    mat = mat - max_dim.reshape((len(max_dim), 1))  # Substract row maximum
+    s = max_dim + np.log(np.sum(np.exp(mat), 1))
+
+    idx_inf = np.nonzero(~ np.isfinite(s))          # Deal with inf entries
+
+    if (len(idx_inf) != 0):
+        s[idx_inf] = max_dim[idx_inf]
+
+    return s
 
 
 def standardize(a, dim=0):
