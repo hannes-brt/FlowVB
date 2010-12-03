@@ -57,12 +57,11 @@ def logsumexp(mat, dim=1):
     """ Returns log(sum(exp(a))) while avoiding numerical underflow
 
     """
-    d = mat.shape[1]
-    max_dim = np.max(mat, dim)                     # Maximum of each row
-    mat = mat - np.tile(max_dim, (d, 1)).T         # Substract row maximum
+    max_dim = np.max(mat, dim)                      # Maximum of each row
+    mat = mat - max_dim.reshape((len(max_dim), 1))  # Substract row maximum
     s = max_dim + np.log(np.sum(np.exp(mat), 1))
 
-    idx_inf = np.nonzero(~ np.isfinite(s))         # Deal with inf entries
+    idx_inf = np.nonzero(~ np.isfinite(s))          # Deal with inf entries
 
     if (len(idx_inf) != 0):
         s[idx_inf] = max_dim[idx_inf]
