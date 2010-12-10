@@ -9,6 +9,7 @@ from flowvb.core._posterior import _Posterior
 from flowvb.core._prior import _Prior
 from flowvb.core._monitor_plot import _MonitorPlot
 from flowvb.utils import element_weights, plot_ellipse, classify_by_distance
+from flowvb.initialize import init_d2_weighting
 import matplotlib.pyplot as plt
 import wx
 
@@ -34,7 +35,7 @@ class FlowVB(HasTraits):
                  init_mean=None,
                  init_covar=None,
                  init_mixweights=None,
-                 init_method='kmeans',
+                 init_method='d2-weighting',
                  prior_dirichlet=1e-3,
                  dof_init=2,
                  remove_comp_thresh=1e-2,
@@ -53,7 +54,9 @@ class FlowVB(HasTraits):
         self.remove_comp_thresh = remove_comp_thresh
 
         # Choose method to intialize the parameters
-        if init_method == 'kmeans':
+        if init_method == 'd2-weighting':
+            init_method = self._init_d2_weighting
+        elif init_method == 'kmeans':
             init_method = self._init_kmeans
         elif init_method == 'random':
             init_method = self._init_random
@@ -158,6 +161,23 @@ class FlowVB(HasTraits):
         """Update plot monitor
         """
         self.frame.update_plot(ESS.smm_mean, ESS.smm_covar)
+
+    def _init_d2_weighting(self, num_comp):
+        """Initialize using D2-weighting
+        """
+
+        centroids_idx = init_d2_weighting(self.data, num_comp)
+
+        init_mean = np.array([self.data[k, :] for k in centroids_idx])
+        init_covar = np.cov(self.data, rowvar=0)
+        init_covar = np.repeat(np.array([init_covar]), num_comp, 0)
+
+        labels = classify_by_distance(self.data, init_mean,
+                                      init_covar).flatten()
+
+        init_covar = self._get_covar(self.data, labels)
+        init_mixweights = element_weights(labels)
+        return (init_mean, labels, init_covar, init_mixweights)
 
     def _init_kmeans(self, num_comp):
         """Initialize using k-means
