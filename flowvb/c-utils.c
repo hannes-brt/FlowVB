@@ -1,7 +1,7 @@
-#import <math.h>
-#import <stdio.h>
-#import <stdlib.h>
-#import <time.h>
+#include <math.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
 
 #define NROW 1000000
 #define NCOL 100
@@ -14,19 +14,10 @@ double logsumexp(const double nums[], size_t ct);
 
 int main(void)
 {
-  /*	double mat[NROW][NCOL] = 
-		{
-		  {3., 5., 1., 2., 3.},
-		  {2., 4., 3., 8., 1.},
-		  {23., 43., 29., 23., 123.},
-		  {43., 20., 129., 49., 12.},
-		  {90., 12., 92., 89., 12.}
-		  }; */
 
 	size_t i, j;
 	int all_ok = 1;
 	double total, elapsed;
-	//	double * mat1d = (double *) mat;
 	static double mat1d[NROW * NCOL];
 	clock_t start, end;
 
@@ -62,7 +53,6 @@ int main(void)
 	return 0;
 }
 
-
 void normalize_logspace_matrix(size_t nrow, size_t ncol, double mat[])
 {
 	size_t i;
@@ -87,7 +77,7 @@ void normalize_logspace(double vec[], size_t ct)
 	L = logsumexp(vec, ct);
 	
 	for (i = 0 ; i < ct ; i++)
-		vec[i] = vec[i] - L;
+	  vec[i] = exp(vec[i] - L);
 	
 }
 

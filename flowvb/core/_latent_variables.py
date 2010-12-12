@@ -138,9 +138,13 @@ class _LatentVariables(HasTraits):
                         scatter[k, :] +
                         num_features / (smm_dof[k] * posterior_nws_scale[k])))
 
-        exp_latent = np.array([get_exp_latent(k) for k in range(num_comp)]).T
+        # I'm saving this array in Fortran-contiguous order
+        # (column-wise) such that after transposing it is in
+        # C-contiguous order.
+        latent_resp = np.array([get_exp_latent(k)
+                                for k in range(num_comp)], order='F').T
 
-        latent_resp = normalize_logspace(exp_latent)
+        latent_resp = normalize_logspace(latent_resp)
         return latent_resp
 
     @staticmethod
