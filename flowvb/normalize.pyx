@@ -14,6 +14,6 @@ def normalize_logspace(np.ndarray[np.double_t, ndim=2] mat):
     rowstride = mat.strides[0] // mat.itemsize
     colstride = mat.strides[1] // mat.itemsize
     normalize_logspace_matrix(n, d, rowstride, colstride, <double*> mat.data)
-    return mat
+
 
     
