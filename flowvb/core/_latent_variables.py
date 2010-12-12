@@ -3,7 +3,8 @@ import numpy as np
 from numpy import log
 from scipy.special import gammaln, psi
 from math import pi
-from flowvb.utils import logdet, normalize_logspace, ind_retain_elements
+from flowvb.utils import logdet, ind_retain_elements
+from flowvb.normalize import normalize_logspace
 
 
 class _LatentVariables(HasTraits):
