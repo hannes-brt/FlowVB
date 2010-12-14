@@ -1,7 +1,7 @@
 import unittest
 from flowvb.utils import repeat, normalize_logspace
 from random import random, randint
-from math import exp
+import numpy as np
 
 
 class TestNormalizeLogspace(unittest.TestCase):
@@ -14,8 +14,8 @@ class TestNormalizeLogspace(unittest.TestCase):
             len_vector = randint(10, self.MAX_LEN_VECTOR)
             x = repeat(len_vector, random)
             x = normalize_logspace(x)
-            log_sum = sum([exp(j) for j in x])
-            self.assertAlmostEqual(log_sum, 1.0, 12)
+            s = np.sum(x)
+            self.assertAlmostEqual(s, 1.0, 12)
 
 
 if __name__ == '__main__':
