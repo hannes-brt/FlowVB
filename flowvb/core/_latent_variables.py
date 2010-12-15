@@ -141,7 +141,7 @@ class _LatentVariables(HasTraits):
         latent_resp = np.array([get_exp_latent(k)
                                 for k in range(num_comp)]).T
 
-        normalize_logspace(latent_resp)
+        latent_resp = normalize_logspace(latent_resp)
         return latent_resp
 
     @staticmethod

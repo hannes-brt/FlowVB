@@ -11,8 +11,8 @@
 
 void normalize_logspace_matrix(size_t nrow, size_t ncol, 
 			       size_t rowstride, size_t colstride,
-			       double mat[]);
-void normalize_logspace(double vec[], size_t stride, size_t ct);
+			       double mat[], double mat_out[]);
+void normalize_logspace(double vec[], double vec_out[], size_t stride, size_t ct);
 double logsumexp(const double nums[], size_t stride, size_t ct);
 
 
@@ -36,7 +36,7 @@ int main(void)
      }
      
      start = clock();
-     normalize_logspace_matrix(NROW, NCOL, rowstride, colstride, mat1d);
+     normalize_logspace_matrix(NROW, NCOL, rowstride, colstride, mat1d, mat1d);
      end = clock();
      elapsed = ((double) (end - start)) / CLOCKS_PER_SEC;
      
@@ -64,7 +64,7 @@ int main(void)
 
      normalize_logspace_matrix(NROW_SMALL, NCOL_SMALL, 
 			       rowstride_small, colstride_small,
-			       mat_small);
+			       mat_small, mat_small);
 
      for (j = 0 ; j < NCOL_SMALL ; j++)
 	  printf("%5d ", (int) j);
@@ -93,16 +93,18 @@ int main(void)
 
 void normalize_logspace_matrix(size_t nrow, size_t ncol, 
 			       size_t rowstride, size_t colstride,
-			       double mat[])
+			       double mat[], double mat_out[])
 {
      size_t i;
 	
      for (i = 0 ; i < nrow ; i++)
-	  normalize_logspace(&mat[i * rowstride], colstride, ncol);
+	  normalize_logspace(&mat[i * rowstride], &mat_out[i * rowstride], 
+			     colstride, ncol);
 	
 }
 
-void normalize_logspace(double vec[], size_t stride, size_t len)
+void normalize_logspace(double vec[], double vec_out[], 
+			size_t stride, size_t len)
 {
      size_t i;
      double L;
@@ -110,7 +112,7 @@ void normalize_logspace(double vec[], size_t stride, size_t len)
      L = logsumexp(vec, stride, len);
 	
      for (i = 0 ; i < len ; i++)
-	  vec[i * stride] = exp(vec[i * stride] - L);
+	  vec_out[i * stride] = exp(vec[i * stride] - L);
      
 }
 
