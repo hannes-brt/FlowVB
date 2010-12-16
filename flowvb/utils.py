@@ -48,7 +48,9 @@ def normalize_logspace(mat):
     """ Normalizes the rows of a matrix while avoiding numerical underflow
     """
 
-    mat = np.array(mat).reshape(1, len(mat))
+    if np.array(mat).ndim == 1:
+        mat = np.array(mat).reshape(1, len(mat))
+
     L = logsumexp(mat)
     d = mat.shape[1]
     return np.exp(mat - np.tile(L, (d, 1)).T)
