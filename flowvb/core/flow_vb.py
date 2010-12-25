@@ -40,7 +40,8 @@ class FlowVB(HasTraits):
                  dof_init=2,
                  remove_comp_thresh=1e-2,
                  whiten_data=False,
-                 plot_monitor=False):
+                 plot_monitor=False,
+                 use_approx=True):
         """Fit the model to the data using Variational Bayes
 
         """
@@ -84,7 +85,8 @@ class FlowVB(HasTraits):
 
         LatentVariables = _LatentVariables(data, ESS, num_comp_init)
 
-        Posterior = _Posterior(Prior, num_comp_init, dof_init)
+        Posterior = _Posterior(Prior, num_comp_init, dof_init,
+                               use_approx=use_approx)
 
         LowerBound = _LowerBound(data, num_obs, num_features,
                                  num_comp_init, Prior)

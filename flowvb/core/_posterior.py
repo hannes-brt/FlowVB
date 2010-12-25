@@ -1,7 +1,7 @@
 from math import log
 import numpy as np
 from numpy.linalg import inv
-from scipy.special import psi
+from scipy.special import psi, erf
 from scipy.optimize import fsolve
 from enthought.traits.api import HasTraits, Array, Float, Int, Bool
 from flowvb.utils import ind_retain_elements
@@ -28,7 +28,8 @@ class _Posterior(HasTraits):
 
     gausian = Bool()
 
-    def __init__(self, Prior, num_comp, smm_dof_init=20, gaussian=False):
+    def __init__(self, Prior, num_comp, smm_dof_init=20,
+                 gaussian=False, use_approx=True):
         """Initialize posterior parameters.
 
         """
@@ -50,6 +51,8 @@ class _Posterior(HasTraits):
 
         self.nws_scale_matrix_inv = [inv(self.nws_scale_matrix[k, :, :])
                                          for k in range(self.num_comp)]
+
+        self.use_approx = use_approx
 
     def update_parameters(self, Prior, ESS, LatentVariables):
         """Update posterior parameters.
@@ -88,13 +91,22 @@ class _Posterior(HasTraits):
         self.nws_scale_matrix_inv = [inv(self.nws_scale_matrix[k, :, :])
                                      for k in range(self.num_comp)]
 
-        self.smm_dof = self._update_smm_dof(self.smm_dof,
-                            self.num_obs,
-                            self.num_comp,
-                            ESS.smm_mixweights,
-                            LatentVariables.latent_resp,
-                            LatentVariables.latent_scale,
-                            LatentVariables.latent_log_scale)
+        if self.use_approx:
+            self.smm_dof = self._update_smm_dof_approx(self.smm_dof,
+                                self.num_obs,
+                                self.num_comp,
+                                ESS.smm_mixweights,
+                                LatentVariables.latent_resp,
+                                LatentVariables.latent_scale,
+                                LatentVariables.latent_log_scale)
+        else:
+            self.smm_dof = self._update_smm_dof(self.smm_dof,
+                                self.num_obs,
+                                self.num_comp,
+                                ESS.smm_mixweights,
+                                LatentVariables.latent_resp,
+                                LatentVariables.latent_scale,
+                                LatentVariables.latent_log_scale)
 
     def remove_clusters(self, indices):
         """Remove clusters with insufficient support.
@@ -213,5 +225,29 @@ class _Posterior(HasTraits):
                 smm_dof_new = smm_dof_old[k]
 
             smm_dof = np.append(smm_dof, smm_dof_new)
+
+        return smm_dof
+
+    @staticmethod
+    def _update_smm_dof_approx(smm_dof_old,
+                               num_obs,
+                               num_comp,
+                               smm_mixweights,
+                               latent_resp,
+                               latent_scale,
+                               latent_log_scale):
+        """ Update `smm_dof` using the approximation of Shoham (2002) """
+
+        smm_dof = smm_dof_old
+
+        for k in range(num_comp):
+            y = - (np.sum(latent_resp[:, k] * (latent_log_scale[:, k] -
+                                             latent_scale[:, k])) /
+                   (num_obs * smm_mixweights[k]))
+            smm_dof_new = (2 / (y + log(y) - 1) +
+                          0.0416 * (1 + erf(0.6594 *
+                                            log(2.1971 / (y + log(y) - 1)))))
+            if not np.isnan(smm_dof_new):
+                smm_dof[k] = smm_dof_new
 
         return smm_dof
