@@ -54,7 +54,6 @@ class _Posterior(HasTraits):
 
         self.use_approx = use_approx
 
-    @profile
     def update_parameters(self, Prior, ESS, LatentVariables):
         """Update posterior parameters.
 
