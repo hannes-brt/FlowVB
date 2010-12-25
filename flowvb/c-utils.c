@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include "c-utils.h"
 
 #define NROW 1000000
 #define NCOL 100
@@ -9,13 +10,10 @@
 #define NCOL_SMALL 5
 #define PRECISION 1e-3
 
-void normalize_logspace_matrix(size_t nrow, size_t ncol, 
-			       size_t rowstride, size_t colstride,
-			       double mat[], double mat_out[]);
 void normalize_logspace(double vec[], double vec_out[], size_t stride, size_t ct);
 double logsumexp(const double nums[], size_t stride, size_t ct);
 
-
+/* A unittest in C */
 int main(void)
 {
      
@@ -91,6 +89,7 @@ int main(void)
 
 }
 
+/* Normalize the rows of a matrix */
 void normalize_logspace_matrix(size_t nrow, size_t ncol, 
 			       size_t rowstride, size_t colstride,
 			       double mat[], double mat_out[])
@@ -103,6 +102,7 @@ void normalize_logspace_matrix(size_t nrow, size_t ncol,
 	
 }
 
+/* Normalize a vector */
 void normalize_logspace(double vec[], double vec_out[], 
 			size_t stride, size_t len)
 {
@@ -116,7 +116,7 @@ void normalize_logspace(double vec[], double vec_out[],
      
 }
 
-
+/* Compute log(exp(vec[0]) + ... + exp(vec[len])) */
 double logsumexp(const double nums[], size_t stride, size_t len) 
 {
      double max_exp = nums[0], sum = 0.0;
