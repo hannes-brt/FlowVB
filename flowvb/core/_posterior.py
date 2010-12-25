@@ -54,6 +54,7 @@ class _Posterior(HasTraits):
 
         self.use_approx = use_approx
 
+    @profile
     def update_parameters(self, Prior, ESS, LatentVariables):
         """Update posterior parameters.
 
@@ -241,12 +242,11 @@ class _Posterior(HasTraits):
         smm_dof = smm_dof_old
 
         for k in range(num_comp):
-            y = - (np.sum(latent_resp[:, k] * (latent_log_scale[:, k] -
-                                             latent_scale[:, k])) /
+            y = - (np.sum(latent_resp[:, k] *
+                          (latent_log_scale[:, k] - latent_scale[:, k])) /
                    (num_obs * smm_mixweights[k]))
-            smm_dof_new = (2 / (y + log(y) - 1) +
-                          0.0416 * (1 + erf(0.6594 *
-                                            log(2.1971 / (y + log(y) - 1)))))
+            smm_dof_new = (2 / (y + log(y) - 1) + 0.0416 *
+                           (1 + erf(0.6594 * log(2.1971 / (y + log(y) - 1)))))
             if not np.isnan(smm_dof_new):
                 smm_dof[k] = smm_dof_new
 
