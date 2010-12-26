@@ -44,6 +44,12 @@ TestUpdateSmmDof = makeTestFaithful('smm_dof.mat',
          'latent_resp', 'latent_scale', 'latent_log_scale'),
         'smm_dof')
 
+TestUpdateSmmDofApprox = makeTestFaithful('smm_dof.mat',
+        _Posterior._update_smm_dof_approx,
+        ('smm_dof_old', 'num_obs', 'num_comp', 'smm_mixweights',
+         'latent_resp', 'latent_scale', 'latent_log_scale'),
+        'smm_dof')
+
 if __name__ == '__main__':
     suite = unittest.TestLoader().loadTestsFromTestCase(TestUpdateDirichlet)
     suite.addTest(
@@ -56,4 +62,6 @@ if __name__ == '__main__':
         unittest.TestLoader().loadTestsFromTestCase(TestUpdateNwsScaleMatrix))
     suite.addTest(
         unittest.TestLoader().loadTestsFromTestCase(TestUpdateSmmDof))
+    suite.addTest(
+        unittest.TestLoader().loadTestsFromTestCase(TestUpdateSmmDofApprox))
     unittest.TextTestRunner(verbosity=2).run(suite)
