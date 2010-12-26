@@ -204,7 +204,8 @@ class _Posterior(HasTraits):
                         latent_resp,
                         latent_scale,
                         latent_log_scale):
-        """ Update `smm_dof` (Eq 36 in Arch2007) """
+        """ Update `smm_dof` (Eq 36 in Arch2007) using linesearch
+        """
 
         smm_dof = np.array([])
 
@@ -236,17 +237,19 @@ class _Posterior(HasTraits):
                                latent_resp,
                                latent_scale,
                                latent_log_scale):
-        """ Update `smm_dof` using the approximation of Shoham (2002) """
+        """ Update `smm_dof` (Eq 36 in Arch2007) using the
+        approximation of Shoham (2002)
+        """
 
         smm_dof = smm_dof_old
 
-        for k in range(num_comp):
-            y = - (np.sum(latent_resp[:, k] *
-                          (latent_log_scale[:, k] - latent_scale[:, k])) /
-                   (num_obs * smm_mixweights[k]))
-            smm_dof_new = (2 / (y + log(y) - 1) + 0.0416 *
-                           (1 + erf(0.6594 * log(2.1971 / (y + log(y) - 1)))))
-            if not np.isnan(smm_dof_new):
-                smm_dof[k] = smm_dof_new
+        y = (-np.sum(latent_resp *
+                    (latent_log_scale - latent_scale), 0) /
+             (num_obs * smm_mixweights))
+        smm_dof_new = (2 / (y + np.log(y) - 1) + 0.0416 *
+                       (1 + erf(0.6594 * np.log(2.1971 /
+                                                (y + np.log(y) - 1)))))
+
+        smm_dof[~np.isnan(smm_dof_new)] = smm_dof_new[~np.isnan(smm_dof_new)]
 
         return smm_dof
