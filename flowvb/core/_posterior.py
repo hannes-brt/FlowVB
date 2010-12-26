@@ -155,11 +155,9 @@ class _Posterior(HasTraits):
                          prior_nws_mean):
         """ Update `nws_mean` (Eq 29 in Arch2007) """
 
-        update = lambda k: (num_obs * scaled_resp[k] *
-                            smm_mean[k, :] + prior_nws_scale *
-                            prior_nws_mean) / nws_scale[k]
-
-        posterior_nws_mean = np.array([update(k) for k in range(num_comp)])
+        posterior_nws_mean = (((num_obs * scaled_resp.T * smm_mean.T).T +
+                               (prior_nws_scale * prior_nws_mean).T).T /
+                              nws_scale).T
         return posterior_nws_mean
 
     @staticmethod
