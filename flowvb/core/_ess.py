@@ -90,10 +90,9 @@ class _ESS(HasTraits):
         """Update `smm_covar` (Eq 33 in Arch2007) """
 
         def update(k):
-            data_center = data - np.tile(smm_mean[k, :], (num_obs, 1))
-            prod = (data_center *
-                    np.tile(latent_resp[:, k] * latent_scale[:, k], (2, 1)).T)
-            return np.dot(prod.T, data_center) /\
+            data_center = data - smm_mean[k, :]
+            prod = data_center.T * (latent_resp[:, k] * latent_scale[:, k]).T
+            return np.dot(prod, data_center) /\
                    (num_obs * latent_scaled_resp[k])
 
         smm_covar = [update(k) for k in range(num_comp)]
