@@ -76,11 +76,8 @@ class _ESS(HasTraits):
                          latent_resp, latent_scale):
         """Update `smm_mean` (Eq 32 in Arch2007) """
 
-        num_features = data.shape[1]
-
-        smm_mean = [np.sum(np.tile(latent_resp[:, k] * latent_scale[:, k],
-                                   (num_features, 1)).T
-                           * data, 0)
+        smm_mean = [np.sum((latent_resp[:, k] * latent_scale[:, k]).T
+                           * data.T, 1)
                     / (num_obs * latent_scaled_resp[k])
                     for k in range(num_comp)]
 
