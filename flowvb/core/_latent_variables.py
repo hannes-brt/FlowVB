@@ -126,20 +126,16 @@ class _LatentVariables(HasTraits):
                             log_det_precision, scatter):
         """ Update `latent_resp` (Eq 22 in Arch2007) """
         num_features = data.shape[1]
-        num_comp = len(log_smm_mixweight)
 
-        def get_exp_latent(k):
-            return (gammaln((num_features + smm_dof[k]) / 2) -
-                    gammaln(smm_dof[k] / 2) -
-                    (num_features / 2) * log(smm_dof[k] * pi) +
-                    log_smm_mixweight[k] + log_det_precision[k] / 2 -
-                    ((num_features + smm_dof[k]) / 2) *
-                    log(1 + (posterior_nws_dof[k] / smm_dof[k]) *
-                        scatter[k, :] +
-                        num_features / (smm_dof[k] * posterior_nws_scale[k])))
-
-        latent_resp = np.array([get_exp_latent(k)
-                                for k in range(num_comp)]).T
+        latent_resp = (gammaln((num_features + smm_dof) / 2) -
+                       gammaln(smm_dof / 2) -
+                       (num_features / 2) * np.log(smm_dof * pi) +
+                       log_smm_mixweight + log_det_precision / 2 -
+                       ((num_features + smm_dof) / 2) *
+                       np.log(1 +
+                              (posterior_nws_dof / smm_dof).T * scatter.T +
+                              (num_features /
+                               (smm_dof * posterior_nws_scale)).T))
 
         latent_resp = normalize_logspace(latent_resp)
         return latent_resp
