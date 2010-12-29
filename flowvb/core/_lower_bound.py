@@ -39,9 +39,10 @@ class _LowerBound(HasTraits):
 
         self.log_dirichlet_const_init = self._log_dirichlet_const(
                                         Prior.dirichlet)
-        self.log_wishart_const_init = self._log_wishart_const(num_features,
-                                        Prior.nws_dof,
-                                        Prior.nws_scale_matrix)
+        self.log_wishart_const_init = float(
+            self._log_wishart_const(num_features,
+                                    Prior.nws_dof,
+                                    Prior.nws_scale_matrix))
 
         self.log_dirichlet_norm_init = \
                 self._log_dirichlet_normalization_prior(num_comp,
@@ -56,10 +57,9 @@ class _LowerBound(HasTraits):
     def get_lower_bound(self, ESS, Prior, Posterior, LatentVariables):
         """Update the lower bound """
 
-        log_wishart_const = [self._log_wishart_const(self.num_features,
-                                        Posterior.nws_dof[k],
-                                        Posterior.nws_scale_matrix[k, :, :])
-                             for k in range(self.num_comp)]
+        log_wishart_const = self._log_wishart_const(self.num_features,
+                                        Posterior.nws_dof,
+                                        Posterior.nws_scale_matrix)
 
         expect_log_px = self._expect_log_px(self.data,
                                             self.num_obs,
@@ -133,6 +133,7 @@ class _LowerBound(HasTraits):
     @staticmethod
     def _log_dirichlet_normalization_prior(num_comp, prior_dirichlet):
         """Compute the normalization constant for the dirichlet distribution"""
+
         log_dirichlet_normalization_prior = gammaln(num_comp *
                                                     prior_dirichlet)
         return log_dirichlet_normalization_prior
@@ -140,6 +141,7 @@ class _LowerBound(HasTraits):
     @staticmethod
     def _log_dirichlet_normalization(num_obs, num_comp, prior_dirichlet):
         """Compute the normalization constant for the dirichlet distribution"""
+
         log_dirichlet_normalization = gammaln(num_obs +
                                               num_comp * prior_dirichlet)
         return log_dirichlet_normalization
@@ -155,9 +157,20 @@ class _LowerBound(HasTraits):
     def _log_wishart_const(num_features, nws_dof,
                            nws_scale_matrix):
         """Compute `log_wishart_const_init` """
-        log_wishart_const = ((nws_dof / 2) * logdet(nws_scale_matrix) -
+
+        if nws_scale_matrix.ndim == 2:
+            ld = logdet(nws_scale_matrix)
+
+        else:
+            ld = [logdet(nws_scale_matrix[k, :, :])
+                  for k in range(nws_scale_matrix.shape[0])]
+
+        log_wishart_const = ((nws_dof / 2) * ld -
+
                                (nws_dof * num_features / 2) * log(2) -
+
                                mvt_gamma_ln(num_features, nws_dof / 2))
+
         return log_wishart_const
 
     @staticmethod
@@ -170,13 +183,13 @@ class _LowerBound(HasTraits):
 
         def update(k):
             #Centered data
-            data_center = (data -
-                           np.tile(posterior_nws_mean[k, :], (num_obs, 1)))
+            data_center = data - posterior_nws_mean[k, :]
 
             # Mahalanobis distance
             S = np.sum(np.dot(data_center,
                               posterior_nws_scale_matrix_inv[k, :, :]) *
                        data_center, 1)
+
             mahal_dist = np.sum(latent_resp[:, k] * latent_scale[:, k] * S)
 
             return (num_features *
@@ -190,33 +203,35 @@ class _LowerBound(HasTraits):
                     (latent_scaled_resp[k] / posterior_nws_scale[k]))
 
         expect_log_px = np.array([update(k) for k in range(num_comp)])
+
         expect_log_px = (-(num_obs * num_features / 2) * log(2 * pi) +
+
                          0.5 * sum(expect_log_px))
+
         return expect_log_px
 
     @staticmethod
     def _expect_log_pu(num_obs, num_comp, smm_mixweights, smm_dof,
                        latent_resp, latent_log_scale, latent_scaled_resp):
         """Compute `expect_log_pu` (Eq 41 in Arch2007) """
-        def update(k):
-            return (0.5 * num_obs * smm_mixweights[k] * smm_dof[k] *
-                    log(smm_dof[k] / 2) -
 
-                    num_obs * smm_mixweights[k] * gammaln(smm_dof[k] / 2) +
-                    (smm_dof[k] / 2 - 1) *
-                    np.sum(latent_resp[:, k] * latent_log_scale[:, k]) -
+        expect_log_pu = np.sum(0.5 * num_obs * smm_mixweights * smm_dof *
+                               np.log(smm_dof / 2) -
 
-                    0.5 * num_obs * smm_dof[k] * latent_scaled_resp[k])
+                               num_obs * smm_mixweights *
+                               gammaln(smm_dof / 2) + (smm_dof / 2 - 1) *
+                               np.sum(latent_resp * latent_log_scale, 0) -
 
-        expect_log_pu = np.sum([update(k) for k in range(num_comp)])
+                               0.5 * num_obs * smm_dof * latent_scaled_resp)
+
         return expect_log_pu
 
     @staticmethod
     def _expect_log_pz(num_comp, latent_resp, log_smm_mixweight):
         """Compute `expect_log_pz` (Eq 42 in Arch2007) """
-        update = lambda k: np.sum(latent_resp[:, k] * log_smm_mixweight[k])
 
-        expect_log_pz = np.sum([update(k) for k in range(num_comp)])
+        expect_log_pz = np.sum(latent_resp * log_smm_mixweight)
+
         return expect_log_pz
 
     @staticmethod
@@ -266,20 +281,19 @@ class _LowerBound(HasTraits):
                        latent_resp, smm_mixweights):
         """Compute `expect_log_qu` (Eq 44 in Arch2007) """
 
-        update = lambda k: num_obs * (-gammaln(gamma_param_alpha[k]) *
-                                      smm_mixweights[k] +
+        expect_log_qu = (num_obs * np.sum(-gammaln(gamma_param_alpha) *
+                                          smm_mixweights +
 
-                                      smm_mixweights[k] *
-                                      psi(gamma_param_alpha[k]) *
-                                      (gamma_param_alpha[k] - 1) +
+                                          smm_mixweights *
+                                          psi(gamma_param_alpha) *
+                                          (gamma_param_alpha - 1) +
 
-                                      np.sum(latent_resp[:, k] *
-                                             log(gamma_param_beta[:, k]))
-                                      / num_obs -
+                                          np.sum(latent_resp *
+                                                 np.log(gamma_param_beta), 0)
+                                          / num_obs -
 
-                                      smm_mixweights[k] * gamma_param_alpha[k])
+                                          smm_mixweights * gamma_param_alpha))
 
-        expect_log_qu = np.sum([update(k) for k in range(num_comp)])
         return expect_log_qu
 
     @staticmethod
@@ -296,23 +310,22 @@ class _LowerBound(HasTraits):
                            log_det_precision):
         """Compute `expect_log_qtheta` (Eq 46 in Arch2007) """
 
-        update = lambda k: ((posterior_dirichlet[k] - 1) *
-                            log_smm_mixweight[k] +
+        expect_log_qtheta = (log_dirichlet_normalization -
+                             0.5 * num_comp *
+                             num_features * (log(2 * pi) + 1) +
 
-                            0.5 * num_features * log(posterior_nws_scale[k]) +
+                             np.sum((posterior_dirichlet - 1) *
+                                    log_smm_mixweight +
 
-                            log_wishart_const[k] +
+                                    0.5 * num_features *
+                                    np.log(posterior_nws_scale) +
 
-                            0.5 * (posterior_nws_dof[k] - num_features) *
-                            log_det_precision[k] -
+                                    log_wishart_const +
 
-                            0.5 * (posterior_nws_dof[k] * num_features) -
+                                    0.5 * (posterior_nws_dof - num_features) *
+                                    log_det_precision -
 
-                            gammaln(posterior_dirichlet[k]))
+                                    0.5 * (posterior_nws_dof * num_features) -
 
-        constant_factors = (log_dirichlet_normalization -
-                            0.5 * num_comp * num_features * (log(2 * pi) + 1))
-
-        expect_log_qtheta = (constant_factors +
-                             np.sum([update(k) for k in range(num_comp)]))
+                                    gammaln(posterior_dirichlet)))
         return expect_log_qtheta

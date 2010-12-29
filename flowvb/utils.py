@@ -22,7 +22,7 @@ def logdet(matrix):
     """
 
     U = cholesky(matrix)
-    logdet = 2 * np.sum(log(np.diag(U)))
+    logdet = 2 * np.sum(np.diag(np.log(U)))
     return logdet
 
 
@@ -33,7 +33,8 @@ def mvt_gamma_ln(n, alpha):
     """
     n = float(n)
     logp = (((n * (n - 1)) / 4) * log(pi) +
-            sum(gammaln(alpha + 0.5 * np.arange(0, -n, -1))))
+            np.sum(gammaln(np.tile(alpha, (n, 1)).T
+                           + 0.5 * np.arange(0, -n, -1)), 1))
     return logp
 
 
