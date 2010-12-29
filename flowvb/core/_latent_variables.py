@@ -177,11 +177,11 @@ class _LatentVariables(HasTraits):
                                   posterior_nws_scale_matrix):
         """ Update `log_det_precision` """
 
-        update = lambda k: (np.sum(psi((posterior_nws_dof[k] +
-                                        1 - range(1, num_features + 1)) / 2)) +
-                            num_features * log(2) -
-                            logdet(posterior_nws_scale_matrix[k, :, :]))
-        log_det_precision = [update(k) for k in range(num_comp)]
+        log_det_precision = (np.sum(psi((np.tile(posterior_nws_dof,
+                                                (num_features, 1)).T
+                                        - range(num_features)) / 2), 1)
+                             + num_features * log(2) -
+                             map(logdet, posterior_nws_scale_matrix))
         return log_det_precision
 
     @staticmethod
