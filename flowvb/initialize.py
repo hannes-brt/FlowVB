@@ -3,6 +3,7 @@ from numpy.random import multinomial
 from scipy.spatial.distance import mahalanobis
 from flowvb.normalize import normalize_logspace
 
+
 def init_d2_weighting(data, num_comp):
 
     num_obs = data.shape[0]
