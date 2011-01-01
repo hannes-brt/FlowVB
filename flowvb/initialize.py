@@ -1,8 +1,7 @@
 import numpy as np
 from numpy.random import multinomial
 from scipy.spatial.distance import mahalanobis
-from flowvb.utils import normalize_logspace
-
+from flowvb.normalize import normalize_logspace
 
 def init_d2_weighting(data, num_comp):
 
