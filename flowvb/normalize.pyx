@@ -1,6 +1,5 @@
 import numpy as np
 cimport numpy as np
-import pudb
 
 cdef extern from "c-utils.h":
      void normalize_logspace_matrix(Py_ssize_t nrow , Py_ssize_t ncol,
