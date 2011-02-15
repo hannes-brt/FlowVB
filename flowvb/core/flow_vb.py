@@ -8,7 +8,9 @@ from flowvb.core._lower_bound import _LowerBound
 from flowvb.core._posterior import _Posterior
 from flowvb.core._prior import _Prior
 from flowvb.core._monitor_plot import _MonitorPlot
-from flowvb.utils import element_weights, plot_ellipse, classify_by_distance
+from flowvb.core._graphics import plot_clustering
+from flowvb.utils import element_weights, plot_ellipse, \
+     classify_by_distance, codebook
 from flowvb.initialize import init_d2_weighting
 import matplotlib.pyplot as plt
 import wx
@@ -42,6 +44,7 @@ class FlowVB(HasTraits):
                  whiten_data=False,
                  plot_monitor=False,
                  use_approx=True):
+
         """Fit the model to the data using Variational Bayes
 
         """
@@ -52,7 +55,24 @@ class FlowVB(HasTraits):
             data = whiten(data)
 
         self.data = data
-        self.remove_comp_thresh = remove_comp_thresh
+
+        # Save options in a dictionary
+        self.options = {
+            'num_comp_init': num_comp_init,
+            'max_iter': max_iter,
+            'thresh': thresh,
+            'verbose': verbose,
+            'init_mean': init_mean,
+            'init_covar': init_covar,
+            'init_mixweights': init_mixweights,
+            'init_method': init_method,
+            'prior_dirichlet': prior_dirichlet,
+            'dof_init': dof_init,
+            'remove_comp_thresh': remove_comp_thresh,
+            'whiten_data': whiten_data,
+            'plot_monitor': plot_monitor,
+            'use_approx': use_approx
+            }
 
         # Choose method to intialize the parameters
         if init_method == 'd2-weighting':
@@ -121,7 +141,6 @@ class FlowVB(HasTraits):
             if verbose:
                 print('iteration %d, lower bound: %f' %
                       (iteration, LowerBound.lower_bound[-1]))
-                print Posterior.nws_mean
 
             iteration += 1
 
@@ -130,11 +149,43 @@ class FlowVB(HasTraits):
         self.LatentVariables = LatentVariables
         self.ESS = ESS
         self.LowerBound = LowerBound
+        self.codebook = codebook(self.LatentVariables.latent_resp)
 
         # Call main loop of wxFrame to keep the window from closing
         if plot_monitor:
             self.frame.end_of_iteration()
             self.app.MainLoop()
+
+    def __repr__(self):
+        import flowvb.core._flow_vb_str
+
+        # Add data dimensions to data dictionary
+        opt = self.options.copy()
+        opt.update({'num_obs': self.data.shape[0],
+                    'num_features': self.data.shape[1]})
+
+        # Build summary string
+        str_summary = flowvb.core._flow_vb_str.str_summary_data
+        str_summary += flowvb.core._flow_vb_str.str_summary_options_init_all
+
+        if self.options['init_mean'] is not None:
+            str_summary += flowvb.core._flow_vb_str.str_summary_init_mean
+            opt['init_mean'] = np.array2string(opt['init_mean'])
+        if self.options['init_covar'] is not None:
+            str_summary += flowvb.core._flow_vb_str.str_summary_init_covar
+            opt['init_covar'] = np.array2string(opt['init_covar'])
+        if self.options['init_mixweights'] is not None:
+            str_summary += flowvb.core._flow_vb_str.str_summary_init_mixweights
+            opt['init_mixweights'] = np.array2string(opt['init_mixweights'])
+
+        str_summary += flowvb.core._flow_vb_str.str_summary_optim_display
+
+        return str_summary % opt
+
+    def plot_result(self, colors=None, dim=(0, 1),
+                    title='', output='screen',
+                    plot_kwargs=dict(), savefig_kwargs=dict()):
+        plot_clustering(self.data, self.codebook, colors, dim, title, output)
 
     def plot_clustering_ellipses(self, ESS=None, dims=[0, 1], scale=1):
         """Make a scatterplot of the data with error ellipses
@@ -237,7 +288,7 @@ class FlowVB(HasTraits):
         # Remove empty cluster
         self._remove_empty_clusters(Prior, LatentVariables, ESS,
                                     Posterior, LowerBound,
-                                    self.remove_comp_thresh)
+                                    self.options['remove_comp_thresh'])
 
         # M-step
         Posterior.update_parameters(Prior, ESS, LatentVariables)
