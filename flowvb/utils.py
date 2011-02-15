@@ -166,3 +166,9 @@ def classify_by_distance(data, mean, covar):
 
     labels = np.apply_along_axis(classify_point, 1, data)
     return labels
+
+
+def codebook(resp):
+    mmax = np.max(resp, 1)
+    return np.array([np.nonzero(resp[i, :] == mmax[i])[0]
+                     for i in range(resp.shape[0])]).flatten()
