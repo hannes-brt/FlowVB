@@ -1,17 +1,17 @@
 import unittest
-import numpy as np
 from scipy.io import loadmat
 from os.path import join
-from flowvb.utils import arrays_almost_equal, standardize
+
+from flowvb.utils import arrays_almost_equal
+
+from tests.constants import TEST_DATA_LOC
 
 TEST_ACCURACY = 3
-MAX_DIFF = pow(10, -TEST_ACCURACY)
-TEST_DATA_LOC = join('tests', 'data', 'old_faithful')
+MAX_DIFF = pow( 10, -TEST_ACCURACY )
 
-
-def makeTestFaithful(mat_filename, test_function, argument_keys, result_key,
+def makeTestFaithful( mat_filename, test_function, argument_keys, result_key,
                      load_data=False, max_diff=MAX_DIFF,
-                     test_data_loc=TEST_DATA_LOC):
+                     test_data_loc=TEST_DATA_LOC ):
     """ Factory function to produce classes that are test cases
     for the _update-methods.
 
@@ -41,21 +41,21 @@ def makeTestFaithful(mat_filename, test_function, argument_keys, result_key,
         A class derived from superclass to use with unittest.
     """
 
-    def runTest(self):
-        test_data = loadmat(join(test_data_loc,
-                                 mat_filename), squeeze_me=True)
-        args = (test_data[arg] for arg in argument_keys)
+    def runTest( self ):
+        test_data = loadmat( join( test_data_loc,
+                                 mat_filename ), squeeze_me=True )
+        args = ( test_data[arg] for arg in argument_keys )
 
         if load_data:
-            data = loadmat(join(test_data_loc,
-                                'faithful.mat'), squeeze_me=True)
-            args = (data['data'], ) + tuple(args)
+            data = loadmat( join( test_data_loc,
+                                'faithful.mat' ), squeeze_me=True )
+            args = ( data['data'], ) + tuple( args )
 
-        test_result = test_function(*args)
-        approx_equal = arrays_almost_equal(test_data[result_key],
+        test_result = test_function( *args )
+        approx_equal = arrays_almost_equal( test_data[result_key],
                                            test_result,
-                                           accuracy=max_diff)
-        self.assertTrue(approx_equal)
+                                           accuracy=max_diff )
+        self.assertTrue( approx_equal )
 
     docstring_function = " Test `" + test_function.__name__ + \
                 "` with some data from Old Faithful"
@@ -64,4 +64,4 @@ def makeTestFaithful(mat_filename, test_function, argument_keys, result_key,
     docstring_class = "Test `" + test_function.__name__ + "`"
     clsdict = {'runTest': runTest,
                 '__doc__': docstring_class}
-    return type('TestFaithful', (unittest.TestCase,), clsdict)
+    return type( 'TestFaithful', ( unittest.TestCase, ), clsdict )

@@ -1,11 +1,9 @@
 import unittest
-from os.path import join
 from flowvb.core._posterior import _Posterior
 from tests.test_old_faithful import makeTestFaithful
 
 TEST_ACCURACY = 3
 MAX_DIFF = pow(10, -TEST_ACCURACY)
-TEST_DATA_LOC = join('tests', 'data', 'old_faithful')
 
 TestUpdateDirichlet = makeTestFaithful('posterior_dirichlet.mat',
             _Posterior._update_dirichlet,

@@ -6,7 +6,7 @@ from flowvb.utils import arrays_almost_equal
 import numpy as np
 from numpy.random import multivariate_normal as rmvnorm
 
-TEST_DATA_LOC = join('tests', 'data', 'old_faithful')
+from tests.constants import TEST_DATA_LOC
 
 
 class TestFaithul(unittest.TestCase):
