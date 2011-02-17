@@ -1,6 +1,6 @@
 import unittest
 from os.path import join
-from flowvb import FlowVB
+from flowvb import FlowVBAnalysis
 from scipy.io import loadmat
 from flowvb.utils import arrays_almost_equal
 import numpy as np
@@ -16,7 +16,7 @@ class TestFaithul(unittest.TestCase):
         self.data = loadmat(join(TEST_DATA_LOC, 'faithful.mat'))['data']
         self.init = loadmat(join(TEST_DATA_LOC, 'faithful_init.mat'),
                             squeeze_me=True)
-        self.model = FlowVB(self.data,
+        self.model = FlowVBAnalysis(self.data,
                        init_mean=self.init['init_mean'],
                        init_covar=self.init['init_covar'],
                        init_mixweights=self.init['init_mixweights'],
@@ -47,7 +47,7 @@ class TestRandom(unittest.TestCase):
         data = np.vstack([np.array(rmvnorm(self.mean[k, :], self.cov, n_obs))
                           for k in range(self.mean.shape[0])])
 
-        self.model = FlowVB(data, 6, thresh=1e-6, init_method='random')
+        self.model = FlowVBAnalysis(data, 6, thresh=1e-6, init_method='random')
 
     def runTest(self):
 
