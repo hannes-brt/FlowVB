@@ -20,7 +20,7 @@ parser.add_argument( 'output_prefix',
                              help='''Prefix to be used for output files.''' )
 
 parser.add_argument( '--file_format',
-                              choices=['csv, fcs'],
+                              choices=['csv', 'fcs'],
                               default='csv',
                               help='''Format of input file.''' )
 
