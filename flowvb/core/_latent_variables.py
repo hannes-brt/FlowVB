@@ -48,7 +48,7 @@ class _LatentVariables(HasTraits):
         self.log_det_precision = np.nan * np.zeros([self.num_comp])
 
         self.gamma_param_alpha = np.nan * np.zeros([self.num_comp])
-        self.gamma_param_beta = (np.nan *
+        self.gamma_param_beta = (np.nan * 
                                  np.zeros([self.num_obs, self.num_comp]))
 
         self.data = data
@@ -127,14 +127,14 @@ class _LatentVariables(HasTraits):
         """ Update `latent_resp` (Eq 22 in Arch2007) """
         num_features = data.shape[1]
 
-        latent_resp = (gammaln((num_features + smm_dof) / 2) -
-                       gammaln(smm_dof / 2) -
-                       (num_features / 2) * np.log(smm_dof * pi) +
-                       log_smm_mixweight + log_det_precision / 2 -
-                       ((num_features + smm_dof) / 2) *
-                       np.log(1 +
-                              (posterior_nws_dof / smm_dof).T * scatter.T +
-                              (num_features /
+        latent_resp = (gammaln((num_features + smm_dof) / 2) - 
+                       gammaln(smm_dof / 2) - 
+                       (num_features / 2) * np.log(smm_dof * pi) + 
+                       log_smm_mixweight + log_det_precision / 2 - 
+                       ((num_features + smm_dof) / 2) * 
+                       np.log(1 + 
+                              (posterior_nws_dof / smm_dof).T * scatter.T + 
+                              (num_features / 
                                (smm_dof * posterior_nws_scale)).T))
 
         latent_resp = normalize_logspace(latent_resp)
@@ -145,7 +145,7 @@ class _LatentVariables(HasTraits):
         """ Update `latent_scale` """
         num_obs = np.shape(gamma_param_beta)[0]
 
-        latent_scale = (np.tile(gamma_param_alpha, (num_obs, 1)) /
+        latent_scale = (np.tile(gamma_param_alpha, (num_obs, 1)) / 
                         gamma_param_beta)
         return latent_scale
 
@@ -154,7 +154,7 @@ class _LatentVariables(HasTraits):
         """ Update `latent_log_scale` """
         num_obs = np.shape(gamma_param_beta)[0]
 
-        latent_log_scale = (np.tile(psi(gamma_param_alpha), (num_obs, 1)) -
+        latent_log_scale = (np.tile(psi(gamma_param_alpha), (num_obs, 1)) - 
                             log(gamma_param_beta))
         return latent_log_scale
 
@@ -168,7 +168,7 @@ class _LatentVariables(HasTraits):
     @staticmethod
     def _update_log_smm_mixweight(posterior_dirichlet):
         """ Update `log_smm_mixweight` """
-        log_smm_mixweight = (psi(posterior_dirichlet) -
+        log_smm_mixweight = (psi(posterior_dirichlet) - 
                              psi(np.sum(posterior_dirichlet)))
         return log_smm_mixweight
 
@@ -180,7 +180,7 @@ class _LatentVariables(HasTraits):
         log_det_precision = (np.sum(psi((np.tile(posterior_nws_dof,
                                                 (num_features, 1)).T
                                         - range(num_features)) / 2), 1)
-                             + num_features * log(2) -
+                             + num_features * log(2) - 
                              map(logdet, posterior_nws_scale_matrix))
         return log_det_precision
 
@@ -196,8 +196,8 @@ class _LatentVariables(HasTraits):
         """ Update `gamma_param_beta` """
         num_comp = np.shape(posterior_nws_dof)[0]
 
-        update = lambda k: ((posterior_nws_dof[k] / 2) * scatter[k, :] +
-                            num_features / (2 * posterior_nws_scale[k]) +
+        update = lambda k: ((posterior_nws_dof[k] / 2) * scatter[k, :] + 
+                            num_features / (2 * posterior_nws_scale[k]) + 
                             smm_dof[k] / 2)
 
         gamma_param_beta = np.array([update(k) for k in range(num_comp)]).T

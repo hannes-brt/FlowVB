@@ -32,7 +32,7 @@ def mvt_gamma_ln(n, alpha):
     alpha > (n-1)/2
     """
     n = float(n)
-    logp = (((n * (n - 1)) / 4) * log(pi) +
+    logp = (((n * (n - 1)) / 4) * log(pi) + 
             np.sum(gammaln(np.tile(alpha, (n, 1)).T
                            + 0.5 * np.arange(0, -n, -1)), 1))
     return logp
@@ -65,7 +65,7 @@ def logsumexp(mat, dim=1):
     mat = mat - max_dim.reshape((len(max_dim), 1))  # Substract row maximum
     s = max_dim + np.log(np.sum(np.exp(mat), 1))
 
-    idx_inf = np.nonzero(~ np.isfinite(s))          # Deal with inf entries
+    idx_inf = np.nonzero(~np.isfinite(s))          # Deal with inf entries
 
     if (len(idx_inf) != 0):
         s[idx_inf] = max_dim[idx_inf]

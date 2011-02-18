@@ -49,7 +49,7 @@ def makeTestFaithful(mat_filename, test_function, argument_keys, result_key,
         if load_data:
             data = loadmat(join(test_data_loc,
                                 'faithful.mat'), squeeze_me=True)
-            args = (data['data'], ) + tuple(args)
+            args = (data['data'],) + tuple(args)
 
         test_result = test_function(*args)
         approx_equal = arrays_almost_equal(test_data[result_key],

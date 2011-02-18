@@ -155,8 +155,8 @@ class _Posterior(HasTraits):
                          prior_nws_mean):
         """ Update `nws_mean` (Eq 29 in Arch2007) """
 
-        posterior_nws_mean = (((num_obs * scaled_resp.T * smm_mean.T).T +
-                               (prior_nws_scale * prior_nws_mean).T).T /
+        posterior_nws_mean = (((num_obs * scaled_resp.T * smm_mean.T).T + 
+                               (prior_nws_scale * prior_nws_mean).T).T / 
                               nws_scale).T
         return posterior_nws_mean
 
@@ -184,10 +184,10 @@ class _Posterior(HasTraits):
         def update(k):
             scatter = np.outer((smm_mean[k, :] - prior_nws_mean),
                       (smm_mean[k, :] - prior_nws_mean))
-            return (num_obs * scaled_resp[k] *
-                    smm_covar[k, :, :] +
-                    (num_obs * scaled_resp[k] *
-                     prior_nws_scale) /
+            return (num_obs * scaled_resp[k] * 
+                    smm_covar[k, :, :] + 
+                    (num_obs * scaled_resp[k] * 
+                     prior_nws_scale) / 
                     nws_scale[k] * scatter + prior_nws_scale_matrix)
 
         posterior_nws_scale_matrix = np.array([update(k)
@@ -214,7 +214,7 @@ class _Posterior(HasTraits):
 
             # By using the absolute value of dof, we prevent the
             # algorithm from failing when it tries dof < 0
-            objective_func = lambda dof: (log(np.absolute(dof) / 2) + 1 -
+            objective_func = lambda dof: (log(np.absolute(dof) / 2) + 1 - 
                                           psi(np.absolute(dof) / 2) + frac)
 
             try:
@@ -241,11 +241,11 @@ class _Posterior(HasTraits):
 
         smm_dof = smm_dof_old
 
-        y = (-np.sum(latent_resp *
-                    (latent_log_scale - latent_scale), 0) /
+        y = (-np.sum(latent_resp * 
+                    (latent_log_scale - latent_scale), 0) / 
              (num_obs * smm_mixweights))
-        smm_dof_new = (2 / (y + np.log(y) - 1) + 0.0416 *
-                       (1 + erf(0.6594 * np.log(2.1971 /
+        smm_dof_new = (2 / (y + np.log(y) - 1) + 0.0416 * 
+                       (1 + erf(0.6594 * np.log(2.1971 / 
                                                 (y + np.log(y) - 1)))))
 
         smm_dof[~np.isnan(smm_dof_new)] = smm_dof_new[~np.isnan(smm_dof_new)]
