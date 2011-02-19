@@ -1,21 +1,21 @@
 import unittest
-from flowvb.core._ess import _ESS
+from flowvb.core._ess import ExpectedSufficientStatistics
 from tests.test_old_faithful import makeTestFaithful
 
 TestUpdateSmmMean = makeTestFaithful('smm_mean.mat',
-    _ESS._update_smm_mean,
+    ExpectedSufficientStatistics._update_smm_mean,
     ('num_obs', 'num_comp', 'latent_scaled_resp',
      'latent_resp', 'latent_scale'),
     'smm_mean', load_data=True)
 
 TestUpdateSmmCovar = makeTestFaithful('smm_covar.mat',
-    _ESS._update_smm_covar,
+    ExpectedSufficientStatistics._update_smm_covar,
     ('num_obs', 'num_features', 'num_comp',
      'latent_resp', 'latent_scale', 'latent_scaled_resp', 'smm_mean'),
     'smm_covar', load_data=True)
 
 TestUpdateSmmMixweights = makeTestFaithful('smm_mixweights.mat',
-    _ESS._update_smm_mixweights,
+    ExpectedSufficientStatistics._update_smm_mixweights,
     ('num_obs', 'latent_resp'),
     'smm_mixweights')
 

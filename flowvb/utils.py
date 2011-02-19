@@ -1,15 +1,27 @@
 """Miscalleneous functions
 """
+import math
+from math import pi, sqrt
 
 import numpy as np
 from numpy import log
 from numpy.linalg import cholesky
-from scipy.special import gammaln
-import math
-from math import pi, sqrt
+
 from matplotlib.patches import Ellipse
 from pylab import gca
 
+from scipy.special import gammaln, psi
+
+def multipsi(x, d):
+    '''
+    Implements the multivariate digamma (psi) function.
+    '''
+    i = np.arange(1, d + 1)
+    
+    mp = psi((x + 1 - i) / 2)
+    mp = mp.sum()
+    
+    return mp
 
 def repeat(x, func, *args, **kargs):
     """Call the function `func` `x` times and accumulate the results in a list

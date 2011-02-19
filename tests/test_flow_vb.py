@@ -26,7 +26,7 @@ class TestFaithul(unittest.TestCase):
         result = loadmat(join(TEST_DATA_LOC, 'faithful_final_mean.mat'),
                          squeeze_me=True)
 
-        approx_equal = arrays_almost_equal(self.model.ESS.smm_mean,
+        approx_equal = arrays_almost_equal(self.model.ExpectedSufficientStatistics.smm_mean,
                                            result['smm_mean'],
                                            accuracy=1e-1)
 
@@ -52,10 +52,10 @@ class TestRandom(unittest.TestCase):
     def runTest(self):
 
         # Test for the correct number of components
-        self.assertEqual(self.model.ESS.num_comp, 3)
+        self.assertEqual(self.model.ExpectedSufficientStatistics.num_comp, 3)
 
         # Test the means
-        sorted_mean = np.sort(self.model.ESS.smm_mean, 0)
+        sorted_mean = np.sort(self.model.ExpectedSufficientStatistics.smm_mean, 0)
         approx_equal = arrays_almost_equal(sorted_mean,
                                            self.mean,
                                            accuracy=1e-1)

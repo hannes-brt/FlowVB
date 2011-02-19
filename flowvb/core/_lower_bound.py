@@ -1,33 +1,20 @@
-from enthought.traits.api import HasTraits, Array, Int, Float
-import numpy as np
-from numpy import log, dot
-from scipy.special import gammaln, psi
 from flowvb.utils import logdet, mvt_gamma_ln
 from math import pi
+from numpy import log, dot
+from scipy.special import gammaln, psi
+import numpy as np
+
+
 
 EPS = np.finfo(np.float).eps
 
 
-class _LowerBound(HasTraits):
-    """Class to compute and store the lower bound.
+class _LowerBound(object):
+    '''
+    Class to compute and store the lower bound.
+    '''
 
-    """
-
-    num_obs = Int()
-    num_features = Int()
-    num_comp = Int()
-
-    log_dirichlet_const_init = Float()
-    log_wishart_const_init = Float()
-
-    log_dirichlet_norm_init = Float()
-    log_dirichlet_norm = Float()
-
-    lower_bound = Array()
-
-    data = Array()
-
-    def __init__(self, data, num_obs, num_features, num_comp, Prior):
+    def __init__(self, prior):
         """Initialize lower bound.
 
         """

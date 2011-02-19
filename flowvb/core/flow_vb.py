@@ -2,8 +2,8 @@ from enthought.traits.api import HasTraits, Instance
 import numpy as np
 from numpy.random import uniform
 from scipy.cluster.vq import whiten, kmeans2
-from flowvb.core._ess import _ESS
-from flowvb.core._latent_variables import _LatentVariables
+from flowvb.core._ess import ESS
+from flowvb.core._latent_variables import LatentVariables
 from flowvb.core._lower_bound import _LowerBound
 from flowvb.core._posterior import _Posterior
 from flowvb.core._prior import _Prior
@@ -25,8 +25,8 @@ class FlowVBAnalysis(HasTraits):
 
     Prior = Instance(_Prior)
     Posterior = Instance(_Posterior)
-    ESS = Instance(_ESS)
-    LatentVariables = Instance(_LatentVariables)
+    ESS = Instance(ESS)
+    LatentVariables = Instance(LatentVariables)
     LowerBound = Instance(_LowerBound)
 
     def __init__(self, data,
@@ -100,10 +100,10 @@ class FlowVBAnalysis(HasTraits):
         # Initialize data structures
         Prior = _Prior(data, num_comp_init, prior_dirichlet)
 
-        ESS = _ESS(data, num_comp_init, init_mean, init_covar,
+        ESS = ESS(data, num_comp_init, init_mean, init_covar,
                    init_mixweights)
 
-        LatentVariables = _LatentVariables(data, ESS, num_comp_init)
+        LatentVariables = LatentVariables(data, ESS, num_comp_init)
 
         Posterior = _Posterior(Prior, num_comp_init, dof_init,
                                use_approx=use_approx)
@@ -112,7 +112,7 @@ class FlowVBAnalysis(HasTraits):
                                  num_comp_init, Prior)
 
         # Initial M-step
-        Posterior.update_parameters(Prior, ESS, LatentVariables)
+        Posterior.update(Prior, ESS, LatentVariables)
 
         # Main loop
         iteration = 1

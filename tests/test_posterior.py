@@ -31,7 +31,7 @@ TestUpdateNwsDof = makeTestFaithful('posterior_nws_dof.mat',
         'posterior_nws_dof')
 
 TestUpdateNwsScaleMatrix = makeTestFaithful('posterior_nws_scale_matrix.mat',
-        _Posterior._update_nws_scale_matrix,
+        _Posterior._get_nws_scale_matrix,
         ('num_obs', 'num_comp', 'smm_mean',
          'prior_nws_mean', 'latent_scaled_resp',
          'smm_covar', 'prior_nws_scale',
