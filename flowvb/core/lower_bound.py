@@ -1,45 +1,22 @@
-from flowvb.utils import logdet, mvt_gamma_ln
 from math import pi
-from numpy import log, dot
-from scipy.special import gammaln, psi
-import numpy as np
 
+import numpy as np
+from numpy import log, dot
+
+from scipy.special import gammaln, psi
+
+from flowvb.utils import logdet, mvt_gamma_lns
 
 
 EPS = np.finfo(np.float).eps
 
 
-class _LowerBound(object):
+class LowerBound(object):
     '''
     Class to compute and store the lower bound.
     '''
-
-    def __init__(self, prior):
-        """Initialize lower bound.
-
-        """
-        self.num_obs = num_obs
-        self.num_features = num_features
-        self.num_comp = num_comp
-
-        self.data = data
-
-        self.log_dirichlet_const_init = self._log_dirichlet_const(
-                                        Prior.dirichlet)
-        self.log_wishart_const_init = float(
-            self._log_wishart_const(num_features,
-                                    Prior.nws_dof,
-                                    Prior.nws_scale_matrix))
-
-        self.log_dirichlet_norm_init = \
-                self._log_dirichlet_normalization_prior(num_comp,
-                                                       Prior.dirichlet)
-        self.log_dirichlet_norm = \
-                self._log_dirichlet_normalization(num_obs, num_comp,
-                                                 Prior.dirichlet)
-
-    def remove_clusters(self, indices):
-        self.num_comp = self.num_comp - len(indices)
+    def __init__(self, priors):
+        self.priors = priors
 
     def get_lower_bound(self, ESS, Prior, Posterior, LatentVariables):
         """Update the lower bound """

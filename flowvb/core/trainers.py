@@ -48,8 +48,8 @@ class ModelTrainer(object):
         self.model.responsibilities = self._init_responsibilities(data)
         
         while not self.converged:            
-            self.model.vbm_step(data)
-            self.model.vbe_step(data)
+            self.model.m_step(data)
+            self.model.e_step(data)
 
             self._convergence_test()
             
@@ -58,7 +58,8 @@ class ModelTrainer(object):
                                    
             self.iters += 1
             
-            self._remove_empty_clusters()
+            if self._remove_empty_clusters():
+                self.e_step(data)
                      
         return self.model
         
@@ -82,12 +83,18 @@ class ModelTrainer(object):
     
     def _remove_empty_clusters(self):
         '''
-        Remove components with insufficient support from the model
+        Remove components with insufficient support from the model.
+        Return true if we remove clusters false otherwise.
         '''
         empty_cluster_indices = np.where(self.model.smm_mixweights < self.remove_comp_thresh)[0]
         empty_cluster_indices = set(empty_cluster_indices)
 
         self.model.remove_clusters(empty_cluster_indices)
+        
+        if len(empty_cluster_indices) > 0:
+            return True
+        else:
+            return False
         
     def _print_diagnostic_message(self):
         print "#" * 100
