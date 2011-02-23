@@ -2,7 +2,7 @@ import numpy as np
 from scipy.special import gammaln, psi
 
 from flowvb.normalize import normalize_logspace
-from flowvb.utils import logdet, ind_retain_elements, multipsi
+from flowvb.utils import logdet, multipsi
 
 
 class LatentVariables(object):
@@ -12,8 +12,11 @@ class LatentVariables(object):
     def update(self, data, parameters):
         '''
         Update latent variables.
-        '''     
+        '''
+        scalar_shape = (1, 6)
+        
         smm_dof = parameters['smm_dof']
+        smm_dof = smm_dof.reshape(scalar_shape)
         
         nws_dof = parameters['nws_dof']
         nws_scale = parameters['nws_scale']

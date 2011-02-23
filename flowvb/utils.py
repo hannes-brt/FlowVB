@@ -15,8 +15,9 @@ from scipy.special import gammaln, psi
 def multipsi(x, d):
     '''
     Implements the multivariate digamma (psi) function.
-    '''
+    '''    
     i = np.arange(1, d + 1)
+    i = i[:,np.newaxis]
     
     mp = psi((x + 1 - i) / 2)
     mp = mp.sum()
