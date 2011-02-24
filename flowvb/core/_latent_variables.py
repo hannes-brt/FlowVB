@@ -3,6 +3,7 @@ from scipy.special import gammaln, psi
 
 from flowvb.normalize import normalize_logspace
 from flowvb.utils import logdet, multipsi
+import scipy.spatial.distance
 
 
 class LatentVariables(object):
@@ -13,10 +14,9 @@ class LatentVariables(object):
         '''
         Update latent variables.
         '''
-        scalar_shape = (1, 6)
+        self.ndim = data.shape[0]
         
         smm_dof = parameters['smm_dof']
-        smm_dof = smm_dof.reshape(scalar_shape)
         
         nws_dof = parameters['nws_dof']
         nws_scale = parameters['nws_scale']
@@ -24,7 +24,7 @@ class LatentVariables(object):
         
         dirichlet = parameters['dirichlet']
                 
-        ndim = data.shape[0]
+        
         
         scatter = self._get_scatter(data, parameters)
         
@@ -68,6 +68,48 @@ class LatentVariables(object):
         
         return latent_variables
     
+    def _get_alpha(self, data, parameters):
+        ndim = data.shape[1]
+        
+        smm_dof = parameters['smm_dof']        
+        
+        alpha = (smm_dof + ndim) / 2
+        
+        return alpha
+    
+    def _get_beta(self, data, parameters):
+        ndim = data.shape[1]
+        
+        smm_dof = parameters['smm_dof']
+        
+        nws_dof = parameters['nws_dof']
+        nws_scale = parameters['nws_scale']
+        
+        scatter = self._get_scatter(data, parameters)
+        
+        beta = (nws_dof / 2) * scatter + \
+               ndim / (2 * nws_scale) + \
+               smm_dof / 2
+               
+        return beta
+        
+#    def _get_scatter(self, data, parameters):
+#        """ Compute the scatter """
+#        nws_mean = parameters['nws_mean']
+#        nws_scale_matrix_inv = parameters['nws_scale_matrix_inv']
+#        
+#        num_obs = data.shape[0]
+#        num_comp = nws_mean.shape[1]
+#
+#        def update(k):
+#            data_center = data - nws_mean[:, k]
+#            
+#            prod = np.dot(data_center,
+#                          nws_scale_matrix_inv[:, :, k])
+#            return np.sum(prod * data_center, 1)
+#
+#        scatter = np.array([update(k) for k in range(num_comp)])
+#        return scatter.swapaxes(0, 1)
     def _get_scatter(self, data, parameters):
         '''
         Compute scatter matrix.
@@ -75,17 +117,21 @@ class LatentVariables(object):
         nws_mean = parameters['nws_mean']
         nws_scale_matrix = parameters['nws_scale_matrix']       
         
-        ndim = nws_mean.shape[0]
+        nobs = data.shape[0]
+        ndim = data.shape[1]
         ncomp = nws_mean.shape[1]
         
-        scatter = np.zeros((ndim, ndim, ncomp))
+        scatter = np.zeros((nobs, ncomp))
         
-        for i in range(ndim):        
-            dist = (data - nws_mean[:, i])
+        for i in range(ncomp):
+            u = data
+            v = nws_mean[:, i]
+            v = v.reshape((1, ndim))            
             
-            nws_scale_matrix_inv = np.linalg.inv(nws_scale_matrix[:, :, i])
+            VI = nws_scale_matrix[:, :, i]
             
-            temp = np.dot(dist.T, nws_scale_matrix_inv) 
-            scatter[:, :, i] = np.dot(temp, dist)
+            x = scipy.spatial.distance.cdist(u, v, 'mahalanobis', VI=VI)
+
+            scatter[:, i] = x.flatten()
         
         return scatter
