@@ -4,7 +4,7 @@ from scipy.io import loadmat
 import numpy as np
 
 
-TEST_DATA_LOC = join('tests', 'data', 'old_faithful')
+TEST_DATA_LOC = join('../', 'tests', 'data', 'old_faithful')
 
 np.random.seed(0)
 
