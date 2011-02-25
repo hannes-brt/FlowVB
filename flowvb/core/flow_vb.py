@@ -411,7 +411,7 @@ class KMeansInitialiser(Initialiser):
         return init_parameters
     
 class UserParameterInitialiser(Initialiser):
-    def _init_from_user_parameters(self, data, init_mean, init_covar, init_mixweights):
+    def initialise_parameters(self, data, init_mean, init_covar, init_mixweights):
         '''
         If starting solution supplied initialise from it.
         '''                
