@@ -16,7 +16,7 @@ def run_flow_vb(args):
     elif args.file_format == 'fcs':
         data = load_array_from_fcs(args.input_file_name)
     
-    analysis = FlowVBAnalysis(data)
+    analysis = FlowVBAnalysis(data, args)
     
     write_analysis_to_files(args.output_prefix, analysis)
 

@@ -29,21 +29,10 @@ class FlowVBAnalysis(HasTraits):
     LatentVariables = Instance(_LatentVariables)
     LowerBound = Instance(_LowerBound)
 
-    def __init__(self, data,
-                 num_comp_init=10,
-                 max_iter=200,
-                 thresh=1e-5,
-                 verbose=False,
+    def __init__(self, data, args,
                  init_mean=None,
                  init_covar=None,
-                 init_mixweights=None,
-                 init_method='d2-weighting',
-                 prior_dirichlet=1e-3,
-                 dof_init=2,
-                 remove_comp_thresh=1e-2,
-                 whiten_data=False,
-                 plot_monitor=False,
-                 use_approx=True):
+                 init_mixweights=None):
 
         """Fit the model to the data using Variational Bayes
 
@@ -51,42 +40,46 @@ class FlowVBAnalysis(HasTraits):
 
         (num_obs, num_features) = np.shape(data)
 
-        if whiten_data:
+        if args.whiten_data:
             data = whiten(data)
 
         self.data = data
+    
+        use_approx = not args.use_exact
 
         # Save options in a dictionary
         self.options = {
-            'num_comp_init': num_comp_init,
-            'max_iter': max_iter,
-            'thresh': thresh,
-            'verbose': verbose,
+            'num_comp_init': args.num_comp_init,
+            'max_iter': args.max_iter,
+            'thresh': args.thresh,
+            'verbose': args.verbose,
             'init_mean': init_mean,
             'init_covar': init_covar,
             'init_mixweights': init_mixweights,
-            'init_method': init_method,
-            'prior_dirichlet': prior_dirichlet,
-            'dof_init': dof_init,
-            'remove_comp_thresh': remove_comp_thresh,
-            'whiten_data': whiten_data,
-            'plot_monitor': plot_monitor,
+            'init_method': args.init_method,
+            'prior_dirichlet': args.prior_dirichlet,
+            'dof_init': args.dof_init,
+            'remove_comp_thresh': args.remove_comp_thresh,
+            'whiten_data': args.whiten_data,
+            'plot_monitor': args.plot_monitor,
             'use_approx': use_approx
             }
 
         # Choose method to intialize the parameters
-        if init_method == 'd2-weighting':
+        if args.init_method == 'd2-weighting':
             init_method = self._init_d2_weighting
-        elif init_method == 'kmeans':
+        elif args.init_method == 'kmeans':
             init_method = self._init_kmeans
-        elif init_method == 'random':
+        elif args.init_method == 'random':
             init_method = self._init_random
 
         if init_mean is None:
             # No starting solution was supplied
             # Initialize with `init_method`
+            num_comp_init = args.num_comp_init
+            
             (init_mean, labels, init_covar, init_mixweights) = \
-                        init_method(num_comp_init)
+                        init_method(args.num_comp_init)
         else:
             # Starting solution was supplied
             num_comp_init = init_mean.shape[0]
@@ -98,14 +91,14 @@ class FlowVBAnalysis(HasTraits):
                 init_covar = self._get_covar(data, labels)
 
         # Initialize data structures
-        Prior = _Prior(data, num_comp_init, prior_dirichlet)
+        Prior = _Prior(data, num_comp_init, args.prior_dirichlet)
 
         ESS = _ESS(data, num_comp_init, init_mean, init_covar,
                    init_mixweights)
 
         LatentVariables = _LatentVariables(data, ESS, num_comp_init)
 
-        Posterior = _Posterior(Prior, num_comp_init, dof_init,
+        Posterior = _Posterior(Prior, num_comp_init, args.dof_init,
                                use_approx=use_approx)
 
         LowerBound = _LowerBound(data, num_obs, num_features,
@@ -118,7 +111,7 @@ class FlowVBAnalysis(HasTraits):
         iteration = 1
         done = False
 
-        if plot_monitor:
+        if args.plot_monitor:
             self._plot_monitor_init()
 
         while not done:
@@ -131,14 +124,14 @@ class FlowVBAnalysis(HasTraits):
             if iteration == 1:
                 converged = False
             else:
-                converged = self._convergence_test(LowerBound, thresh)
+                converged = self._convergence_test(LowerBound, args.thresh)
 
-            done = converged or (iteration >= max_iter)
+            done = converged or (iteration >= args.max_iter)
 
-            if plot_monitor:
+            if args.plot_monitor:
                 self._plot_monitor_update(ESS)
 
-            if verbose:
+            if args.verbose:
                 print('iteration %d, lower bound: %f' % 
                       (iteration, LowerBound.lower_bound[-1]))
 
@@ -152,7 +145,7 @@ class FlowVBAnalysis(HasTraits):
         self.codebook = codebook(self.LatentVariables.latent_resp)
 
         # Call main loop of wxFrame to keep the window from closing
-        if plot_monitor:
+        if args.plot_monitor:
             self.frame.end_of_iteration()
             self.app.MainLoop()
 
