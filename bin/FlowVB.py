@@ -49,7 +49,8 @@ train_group.add_argument('--whiten_data', action='store_true', default=False,
                           help='''If set the program will whiten the data set. Default False.''')
 
 train_group.add_argument('--plot_monitor', action='store_true', default=False,
-                          help='''If set the program will display a window plotting lower bound. Default False.''')
+                          help='''If set the program will display a window plotting clusters as they are fit. Default
+                          False.''')
 
 train_group.add_argument('--use_exact', action='store_true', default=False,
                           help='''If set the will use an exact line search to estimate dof in student-t densities. By
