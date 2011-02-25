@@ -1,19 +1,21 @@
+import matplotlib.pyplot as plt
+
 import numpy as np
 from numpy.random import uniform
 
 from scipy.cluster.vq import whiten, kmeans2
+
+import wx
+
 from flowvb.core._ess import _ESS
+from flowvb.core._graphics import plot_clustering
 from flowvb.core._latent_variables import _LatentVariables
 from flowvb.core._lower_bound import _LowerBound
+from flowvb.core._monitor_plot import _MonitorPlot
 from flowvb.core._posterior import _Posterior
 from flowvb.core._prior import _Prior
-from flowvb.core._monitor_plot import _MonitorPlot
-from flowvb.core._graphics import plot_clustering
-from flowvb.utils import element_weights, plot_ellipse, \
-     classify_by_distance, codebook
 from flowvb.initialize import init_d2_weighting
-import matplotlib.pyplot as plt
-import wx
+from flowvb.utils import element_weights, plot_ellipse, classify_by_distance, codebook
 
 EPS = np.finfo(np.float).eps
 
@@ -165,26 +167,30 @@ class FlowVBAnalysis(object):
             
         return initial_parameters
 
-    @staticmethod
-    def _remove_empty_clusters(Prior, LatentVariables, ESS, Posterior,
-                             LowerBound, remove_comp_thresh):
-        """Remove components with insufficient support from the model
-        """
+    def _remove_empty_clusters(self):
+        '''
+        Remove components with insufficient support from the model
+        '''
         empty_cluster_indices = np.nonzero(
-            ESS.smm_mixweights < remove_comp_thresh)[0]
+            self.ess.smm_mixweights < self.options.remove_comp_thresh)[0]
+        
         empty_cluster_indices = set(empty_cluster_indices)
 
         if len(empty_cluster_indices) > 0:
-            Prior.remove_clusters(empty_cluster_indices)
-            LatentVariables.remove_clusters(empty_cluster_indices)
-            ESS.remove_clusters(empty_cluster_indices)
-            Posterior.remove_clusters(empty_cluster_indices)
-            LowerBound.remove_clusters(empty_cluster_indices)
+            self.prior.remove_clusters(empty_cluster_indices)
+            
+            self.latent_variables.remove_clusters(empty_cluster_indices)
+            
+            self.ess.remove_clusters(empty_cluster_indices)
+            
+            self.posterior.remove_clusters(empty_cluster_indices)
+            
+            self.lower_bound.remove_clusters(empty_cluster_indices)
 
     def _update_step(self):
-        """Update the paramters
-        """
-
+        '''
+        Update the paramters
+        '''
         # E-step
         self.latent_variables.update_parameters(self.posterior)
 
@@ -193,12 +199,7 @@ class FlowVBAnalysis(object):
                                    self.latent_variables)
 
         # Remove empty cluster
-        self._remove_empty_clusters(self.prior,
-                                    self.latent_variables,
-                                    self.ess,
-                                    self.posterior,
-                                    self.lower_bound,
-                                    self.options.remove_comp_thresh)
+        self._remove_empty_clusters()
 
         # M-step
         self.posterior.update_parameters(self.prior,
