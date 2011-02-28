@@ -59,12 +59,16 @@ train_group.add_argument('--use_exact', action='store_true', default=False,
 train_group.add_argument('--dof_init', default=2, type=float,
                          help='''Initial dof value for studen-t densities.''')
 
+train_group.add_argument('--init_params_file', default=None,
+                         help='''Path to file with initial parameter values.''')
+
 prior_group = parser.add_argument_group(title='Prior Parameters',
                                         description='Prior values for the model.')
 
 prior_group.add_argument('--prior_dirichlet', default=1e-2, type=float,
                          help='''Value of parameters in dirichlet prior distribution (<1 promotes sparsity). Default
                          1e-2.''')
+
 
 parser.set_defaults(func=run_flow_vb)
 #===============================================================================
