@@ -1,9 +1,8 @@
 import matplotlib.pyplot as plt
 
 import numpy as np
-from numpy.random import uniform
 
-from scipy.cluster.vq import whiten, kmeans2
+from scipy.cluster.vq import whiten
 
 import wx
 
@@ -14,8 +13,8 @@ from flowvb.core._lower_bound import _LowerBound
 from flowvb.core._monitor_plot import _MonitorPlot
 from flowvb.core._posterior import _Posterior
 from flowvb.core._prior import _Prior
-from flowvb.initialize import init_d2_weighting
-from flowvb.utils import element_weights, plot_ellipse, classify_by_distance, codebook
+
+from flowvb.utils import plot_ellipse, codebook
 
 EPS = np.finfo(np.float).eps
 
@@ -115,9 +114,7 @@ class FlowVBAnalysis(object):
         data = self.data        
         (num_obs, num_features) = np.shape(data)        
         options = self.options
-        
-        initial_parameters = self._initialise_model_parameters()
-        
+
         # Initialize data structures
         self.prior = _Prior(self.data,
                             options.num_comp_init,
@@ -125,9 +122,9 @@ class FlowVBAnalysis(object):
 
         self.ess = _ESS(data,
                         options.num_comp_init,
-                        initial_parameters['mean'],
-                        initial_parameters['covar'],
-                        initial_parameters['mixweights'])
+                        options.init_params['mean'],
+                        options.init_params['covar'],
+                        options.init_params['mixweights'])
 
         self.latent_variables = _LatentVariables(data,
                                                  self.ess,
@@ -143,29 +140,6 @@ class FlowVBAnalysis(object):
                                        num_features,
                                        options.num_comp_init,
                                        self.prior)
-    
-    def _initialise_model_parameters(self):
-        # Choose method to intialize the parameters
-        if self.options.init_method == 'd2-weighting':
-            initialiser = D2Initialiser()
-        elif self.options.init_method == 'kmeans':
-            initialiser = KMeansInitialiser()
-        elif self.options.init_method == 'random':
-            initialiser = RandomInitialiser()
-
-        if self.options.init_mean is None:
-            initial_parameters = initialiser.initialise_parameters(self.data,
-                                                                   self.options.num_comp_init)
-        else:
-            initialiser = UserParameterInitialiser()
-            initial_parameters = initialiser.initialise_parameters(self.data,
-                                                                   self.options.init_mean,
-                                                                   self.options.init_covar,
-                                                                   self.options.init_mixweights)            
-
-            self.options.num_comp_init = initial_parameters['mean'].shape[0]
-            
-        return initial_parameters
 
     def _remove_empty_clusters(self):
         '''
@@ -233,7 +207,6 @@ class Options(object):
     def __init__(self, args):
         # Initialisation
         self.num_comp_init = args.num_comp_init
-        self.init_method = args.init_method
         self.prior_dirichlet = args.prior_dirichlet
         self.dof_init = args.dof_init
         
@@ -250,9 +223,7 @@ class Options(object):
         self.verbose = args.verbose
         self.plot_monitor = args.plot_monitor
         
-        self.init_mean = None
-        self.init_covar = None
-        self.init_mixweights = None
+        self.init_params = args.init_params
 
 class PlotMonitor(object):
     def __init__(self, data):
@@ -304,130 +275,3 @@ class AnalysisPlotter(object):
             plot_ellipse(pos, cov, edge='red')
 
         plt.show()
-
-class Initialiser(object):
-    def initialise_parameters(self, data, num_comp):
-        raise NotImplemented
-    
-    def _get_covar(self, data, labels, *args, **kargs):
-        '''
-        Compute the covariance in all clusters
-        '''
-        elements = range(max(labels) + 1)
-
-        def covar(m):
-            # Make sure, a dxd-matrix is returned, even when there are
-            # only zero or one observations
-            if len(m.shape) > 1:
-                d, n = m.shape
-            elif len(m.shape) == 1:
-                n = 1
-                d = m.shape[2]
-            if n > 1:
-                return np.cov(m, *args, **kargs)
-            else:
-                return np.zeros([d, d])
-
-        return np.array([covar(data[labels == l, :].T)
-                         for l in elements])
-    
-class RandomInitialiser(Initialiser):
-    def initialise_parameters(self, data, num_comp):
-        '''
-        Initialize randomly
-        '''
-        D = data.shape[1]
-        
-        data_lims = np.array([[data[:, d].min(), data[:, d].max()]
-                              for d in range(D)])
-
-        init_mean = np.array([uniform(*data_lims[d, :], size=num_comp)
-                              for d in range(D)]).T
-
-        covar_init = np.repeat([np.diag([1] * D)], num_comp, 0)
-
-        labels = classify_by_distance(data,
-                                      init_mean,
-                                      covar_init)
-        labels = labels.flatten()
-        
-        init_covar = self._get_covar(data, labels)
-        
-        init_mixweights = element_weights(labels)
-        
-        init_parameters = {}
-        init_parameters['mean'] = init_mean
-        init_parameters['covar'] = init_covar
-        init_parameters['mixweights'] = init_mixweights
-            
-        return init_parameters
-    
-class D2Initialiser(Initialiser):
-    def initialise_parameters(self, data, num_comp):
-        """Initialize using D2-weighting
-        """
-
-        centroids_idx = init_d2_weighting(data, num_comp)
-
-        init_mean = np.array([data[k, :] for k in centroids_idx])
-                
-        init_covar = np.cov(data, rowvar=0)
-        
-        init_covar = np.repeat(np.array([init_covar]), num_comp, 0)
-
-        labels = classify_by_distance(data,
-                                      init_mean,
-                                      init_covar)
-        
-        labels = labels.flatten()
-
-        init_covar = self._get_covar(data, labels)
-        
-        init_mixweights = element_weights(labels)
-        
-        init_parameters = {}
-        init_parameters['mean'] = init_mean
-        init_parameters['covar'] = init_covar
-        init_parameters['mixweights'] = init_mixweights
-            
-        return init_parameters
-    
-class KMeansInitialiser(Initialiser):
-    def initialise_parameters(self, data, num_comp):
-        '''
-        Initialize using k-means
-        '''
-        (init_mean, labels) = kmeans2(data, num_comp)
-        
-        init_covar = self._get_covar(data, labels)
-        
-        init_mixweights = element_weights(labels)
-        
-        init_parameters = {}
-        init_parameters['mean'] = init_mean
-        init_parameters['covar'] = init_covar
-        init_parameters['mixweights'] = init_mixweights
-            
-        return init_parameters
-    
-class UserParameterInitialiser(Initialiser):
-    def initialise_parameters(self, data, init_mean, init_covar, init_mixweights):
-        '''
-        If starting solution supplied initialise from it.
-        '''                
-        if init_mixweights is None:
-            labels = classify_by_distance(data,
-                                          init_mean,
-                                          init_covar)
-            
-            init_mixweights = element_weights(labels)
-        
-        if init_covar is None:
-            init_covar = self._get_covar(data, labels)
-        
-        init_parameters = {}
-        init_parameters['mean'] = init_mean
-        init_parameters['covar'] = init_covar
-        init_parameters['mixweights'] = init_mixweights
-            
-        return init_parameters
