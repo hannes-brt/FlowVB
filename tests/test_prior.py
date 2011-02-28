@@ -9,7 +9,7 @@ class TestPrior(unittest.TestCase):
         """ Tests traits of `_Prior` class for correctness """
 
         num_comp = 6
-        data = np.genfromtxt(os.path.join('tests', 'data', 'old_faithful',
+        data = np.genfromtxt(os.path.join('data', 'old_faithful',
                                           'faithful.txt'))
         num_obs = data.shape[0]
         num_features = data.shape[1]

@@ -1,12 +1,14 @@
 import unittest
-import numpy as np
-from scipy.io import loadmat
+
 from os.path import join
-from flowvb.utils import arrays_almost_equal, standardize
+
+from scipy.io import loadmat
+
+from flowvb.utils import arrays_almost_equal
 
 TEST_ACCURACY = 3
 MAX_DIFF = pow(10, -TEST_ACCURACY)
-TEST_DATA_LOC = join('tests', 'data', 'old_faithful')
+TEST_DATA_LOC = join( 'data', 'old_faithful')
 
 
 def makeTestFaithful(mat_filename, test_function, argument_keys, result_key,
