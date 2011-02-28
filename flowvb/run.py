@@ -9,6 +9,7 @@ import numpy as np
 
 from flowvb.fcs import load_array_from_fcs
 from flowvb.core.flow_vb import FlowVBAnalysis
+from flowvb.initialize import D2Initialiser, KMeansInitialiser, RandomInitialiser, UserParameterInitialiser
 
 def run_flow_vb(args):
     if args.file_format == 'csv':
@@ -16,10 +17,29 @@ def run_flow_vb(args):
     elif args.file_format == 'fcs':
         data = load_array_from_fcs(args.input_file_name)
     
+    # If not file with init params supplied look for initialisation method.
+    if args.init_params_file is None:   
+        if args.init_method == 'd2-weighting':
+            initialiser = D2Initialiser()
+        elif args.init_method == 'kmeans':
+            initialiser = KMeansInitialiser()
+        elif args.init_method == 'random':
+            initialiser = RandomInitialiser()
+            
+        args.init_params = initialiser.initialise_parameters(data, args.num_comp_init)
+    # Else load initial parameters from file.
+    else:
+        initialiser = UserParameterInitialiser()
+        
+        args.init_params = initialiser.initialise_parameters(data, args.init_params_file)
+        
     analysis = FlowVBAnalysis(data, args)
     
     write_analysis_to_files(args.output_prefix, analysis)
 
+#=======================================================================================================================
+# IO
+#=======================================================================================================================
 def write_analysis_to_files(prefix, analysis):    
     soft_labels = analysis.get_soft_labels()
     soft_labels_file_name = prefix + ".soft_labels.tsv"  
