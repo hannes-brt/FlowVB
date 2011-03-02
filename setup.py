@@ -18,5 +18,5 @@ setup(
             'flowvb.core'        
             ],
   
-  scripts=['bin/FlowVB']
+  scripts=['bin/FlowVB.py']
  )
