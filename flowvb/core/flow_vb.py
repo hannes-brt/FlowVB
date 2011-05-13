@@ -22,13 +22,19 @@ EPS = np.finfo(np.float).eps
 class FlowVBAnalysis(object):
     '''
     Gate flow cytometry data using mixtures of Student-t densities
+    
+    Parameters
+    ----------
+    data : array-like, shape = [n_samples, n_features]
+           Flow cytometry data set, where n_samples in the number of samples and n_features is the number of features.
+
+    options : flowvb.core.flow_vb.Options object
+              Contains options and initial parameter values for the analysis.        
     '''
-    def __init__(self, data, args):
-        '''
-        Fit the model to the data using Variational Bayes
-        '''        
-        # Save options in an options object.
-        self.options = Options(args)
+    
+    
+    def __init__(self, data, options):
+        self.options = options
         
         if self.options.whiten_data:
             data = whiten(data)
@@ -46,7 +52,7 @@ class FlowVBAnalysis(object):
         iteration = 1
         done = False
 
-        if args.plot_monitor:
+        if self.options.plot_monitor:
             self._plot_monitor = PlotMonitor(data)
 
         while not done:
@@ -59,12 +65,12 @@ class FlowVBAnalysis(object):
             else:
                 converged = self._convergence_test()
 
-            done = converged or (iteration >= args.max_iter)
+            done = converged or (iteration >= self.options.max_iter)
 
-            if args.plot_monitor:
+            if self.options.plot_monitor:
                 self._plot_monitor.update(self.ess)
 
-            if args.verbose:
+            if self.options.verbose:
                 print('iteration %d, lower bound: %f' % 
                       (iteration, self.lower_bound.lower_bound[-1]))
 
@@ -113,7 +119,9 @@ class FlowVBAnalysis(object):
     def _initialise_model(self):
         data = self.data        
         (num_obs, num_features) = np.shape(data)        
-        options = self.options
+        
+        init_params = self.options.init_params
+        options = self.options        
 
         # Initialize data structures
         self.prior = _Prior(self.data,
@@ -122,9 +130,9 @@ class FlowVBAnalysis(object):
 
         self.ess = _ESS(data,
                         options.num_comp_init,
-                        options.init_params['mean'],
-                        options.init_params['covar'],
-                        options.init_params['mixweights'])
+                        init_params['mean'],
+                        init_params['covar'],
+                        init_params['mixweights'])
 
         self.latent_variables = _LatentVariables(data,
                                                  self.ess,
@@ -204,9 +212,20 @@ class FlowVBAnalysis(object):
         return converged
 
 class Options(object):
-    def __init__(self, args):
+    def __init__(self, init_params, args=None):
+        if args is not None:
+            self._init_from_args(args)
+        else:
+            self._init_from_default()
+        
+        self.init_params = init_params
+        self.num_comp_init = init_params['mixweights'].size
+    
+    def _init_from_args(self, args):
+        '''
+        Initialise Options object from argparse.Namespace (args) object.
+        '''        
         # Initialisation
-        self.num_comp_init = args.num_comp_init
         self.prior_dirichlet = args.prior_dirichlet
         self.dof_init = args.dof_init
         
@@ -222,8 +241,27 @@ class Options(object):
         # Output
         self.verbose = args.verbose
         self.plot_monitor = args.plot_monitor
+    
+    def _init_from_default(self):
+        '''
+        Initialise Options with default values
+        '''
+        # Initialisation
+        self.prior_dirichlet = 1e-3
+        self.dof_init = 2
         
-        self.init_params = args.init_params
+        # Training
+        self.max_iter = 200
+        self.thresh = 1e-5
+        self.remove_comp_thresh = 1e-2
+        self.use_approx = True
+        
+        # Pre-processing
+        self.whiten_data = False
+        
+        # Output
+        self.verbose = False
+        self.plot_monitor = False    
 
 class PlotMonitor(object):
     def __init__(self, data):
