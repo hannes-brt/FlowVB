@@ -1,37 +1,19 @@
-import unittest
 from os.path import join
-from flowvb import FlowVBAnalysis
-from scipy.io import loadmat
-from flowvb.utils import arrays_almost_equal
+import unittest
+
 import numpy as np
 from numpy.random import multivariate_normal as rmvnorm
-from argparse import Namespace
+from scipy.io import loadmat
+
+from flowvb import FlowVBAnalysis
+from flowvb.core.flow_vb import Options
 from flowvb.initialize import RandomInitialiser
+from flowvb.utils import arrays_almost_equal
 
 TEST_DATA_LOC = join('../', 'tests', 'data', 'old_faithful')
 
-
 class FlowVBAnalysisTest(unittest.TestCase):
-    def _get_default_args(self):
-        '''
-        Initialise standard model arguments.
-        '''        
-        args = Namespace()
-        
-        args.num_comp_init = 6
-        args.thresh = 1e-6
-        args.max_iter = 200
-        args.verbose = False
-        
-        args.prior_dirichlet = 1e-2
-        args.dof_init = 2
-        args.remove_comp_thresh = 1e-6
-        
-        args.use_exact = False
-        args.whiten_data = False
-        args.plot_monitor = False
-        
-        return args
+    pass
 
 class TestFaithul(FlowVBAnalysisTest):
     """Test with the Old Faithful data """
@@ -40,15 +22,14 @@ class TestFaithul(FlowVBAnalysisTest):
         self.data = loadmat(join(TEST_DATA_LOC, 'faithful.mat'))['data']
         self.init = loadmat(join(TEST_DATA_LOC, 'faithful_init.mat'),
                             squeeze_me=True)
+                        
+        init_params = {}
+        init_params['mean'] = self.init['init_mean']
+        init_params['covar'] = self.init['init_covar']
+        init_params['mixweights'] = self.init['init_mixweights']
         
-        args = self._get_default_args()
-                
-        args.init_params = {}
-        args.init_params['mean'] = self.init['init_mean']
-        args.init_params['covar'] = self.init['init_covar']
-        args.init_params['mixweights'] = self.init['init_mixweights']
-        
-        self.model = FlowVBAnalysis(self.data, args)
+        options = Options(init_params)        
+        self.model = FlowVBAnalysis(self.data, options)
 
     def testMean(self):
         result = loadmat(join(TEST_DATA_LOC, 'faithful_final_mean.mat'),
@@ -73,12 +54,14 @@ class TestRandom(FlowVBAnalysisTest):
         n_obs = 2000
 
         data = np.vstack([np.array(rmvnorm(self.mean[k, :], self.cov, n_obs))
-                          for k in range(self.mean.shape[0])])
-        
-        args = self._get_default_args()        
-        args.init_params = RandomInitialiser().initialise_parameters(data, args.num_comp_init)
+                          for k in range(self.mean.shape[0])])                        
 
-        self.model = FlowVBAnalysis(data, args)
+        initialiser = RandomInitialiser()
+        init_params = initialiser.initialise_parameters(data, 6)
+        
+        options = Options(init_params)
+        
+        self.model = FlowVBAnalysis(data, options)
 
     def runTest(self):
 

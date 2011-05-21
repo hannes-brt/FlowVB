@@ -14,15 +14,15 @@ parser = argparse.ArgumentParser(prog='FlowVB')
 # Add analysis sub-command
 #===============================================================================
 parser.add_argument('input_file_name',
-                             help='''Path to input file.''')
+                    help='''Path to input file.''')
 
 parser.add_argument('output_prefix',
-                             help='''Prefix to be used for output files.''')
+                    help='''Prefix to be used for output files.''')
 
 parser.add_argument('--file_format',
-                              choices=['csv', 'fcs'],
-                              default='fcs',
-                              help='''Format of input file.''')
+                    choices=['csv', 'fcs'],
+                    default='fcs',
+                    help='''Format of input file.''')
 
 train_group = parser.add_argument_group(title='Training Parameters',
                                         description='Options for training the model.')

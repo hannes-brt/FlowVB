@@ -8,7 +8,7 @@ import csv
 import numpy as np
 
 from flowvb.fcs import load_array_from_fcs
-from flowvb.core.flow_vb import FlowVBAnalysis
+from flowvb.core.flow_vb import FlowVBAnalysis, Options
 from flowvb.initialize import D2Initialiser, KMeansInitialiser, RandomInitialiser, UserParameterInitialiser
 
 def run_flow_vb(args):
@@ -26,14 +26,16 @@ def run_flow_vb(args):
         elif args.init_method == 'random':
             initialiser = RandomInitialiser()
             
-        args.init_params = initialiser.initialise_parameters(data, args.num_comp_init)
+        init_params = initialiser.initialise_parameters(data, args.num_comp_init)
     # Else load initial parameters from file.
     else:
         initialiser = UserParameterInitialiser()
         
-        args.init_params = initialiser.initialise_parameters(data, args.init_params_file)
+        init_params = initialiser.initialise_parameters(data, args.init_params_file)
         
-    analysis = FlowVBAnalysis(data, args)
+    options = Options(init_params, args)
+        
+    analysis = FlowVBAnalysis(data, options)
     
     write_analysis_to_files(args.output_prefix, analysis)
 
