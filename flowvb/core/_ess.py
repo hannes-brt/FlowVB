@@ -92,7 +92,7 @@ class _ESS(HasTraits):
         def update(k):
             data_center = data - smm_mean[k, :]
             prod = data_center.T * (latent_resp[:, k] * latent_scale[:, k]).T
-            return np.dot(prod, data_center) /\
+            return np.dot(prod, data_center) / \
                    (num_obs * latent_scaled_resp[k])
 
         smm_covar = [update(k) for k in range(num_comp)]
